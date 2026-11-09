@@ -1,0 +1,13 @@
+# derived / big / binary — never tracked
+*.ppumod
+*.elf
+*.o
+*.obj
+*.bin
+*.gz
+re/disasm/
+re/link/
+build/
+__pycache__/
+*.dat
+!docs/*.md
