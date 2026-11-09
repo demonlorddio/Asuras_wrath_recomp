@@ -14,7 +14,8 @@
 - [ ] D merge gates C1–C4 (when Option D launches)
 
 ## Freebuff — work these IN ORDER, repo-local only (zero conflict with Agnes)
-- [ ] **T-002** PPU disassembly pipeline + PPUAnalyser dumps → `re/disasm/`, `re/ppuanalyser/`
+- [x] **T-002** PPU disassembly pipeline + PPUAnalyser dumps → `re/disasm/`, `re/ppuanalyser/`
+      (done 2026-11-09: 39,248 functions, 262 syscall sites, PPU hash MATCH — report at the bottom of T-002.md)
 - [ ] **T-003** static link 225 objects → import inventory → `re/imports.txt` + `docs/D2-tasklist.md`
 - [ ] **T-004** .rodata candidate sweep → `re/candidates.csv` (+ top-5 rationale in `docs/`)
 
