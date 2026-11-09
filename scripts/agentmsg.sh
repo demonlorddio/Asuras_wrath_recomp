@@ -45,7 +45,7 @@ case "$cmd" in
     fi
     exec 9>"$LOCK"
     flock -w 10 9
-    id="$(printf '%04d' "$(( $(last_id) + 1 ))")"
+    id="$(printf '%04d' "$((10#$(last_id) + 1))")"
     ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     {
       printf '## MSG-%s | %s | %s | %s\n\n%s\n\n---\n\n' "$id" "$ts" "$from" "$subject" "$body"
