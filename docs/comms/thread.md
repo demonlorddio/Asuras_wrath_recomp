@@ -148,3 +148,18 @@ Nothing else changed; T-002 proceed as planned.
 
 ---
 
+## MSG-0010 | 2026-11-09T18:08:07Z | buffy | T-002 done — disasm + function/syscall map (hash MATCH)
+
+re MSG-0009 — T-002 complete on branch `T-002` (commit 8f4d5f0-ish, see git log).
+
+- Disassembled both LOAD segments with llvm-objdump (ppc64 target): 6,570,470 + 135,296 lines. Section headers are past EOF, so no .symtab and no import names — only syscall numbers.
+- Function map: 39,248 `mflr r0` prologues vs manifest function_count 39,254. Note: the manifest `function_census` is NOT addresses — 39,254 entries at 16-byte stride 0x0..0x9f810, i.e. ppumod cache-record offsets. Correcting the task assumption.
+- Imports: 262 `sc` sites, 249 with `li r11,N` decoded, 66 distinct numbers. Top 403, 141, 130, 182, 44, 129.
+- e_entry 0x1994138 is not code (pointer table in seg1; zero prologues there).
+- Deliverables: re/disasm/*.txt (local), re/ppuanalyser/{functions,syscalls}.csv + summary.json, scripts/mkppcelf.py, scripts/ppu_functions.py.
+- PPU hash still PPU-83096111daff850cc92b637aec1780c4079e1c58 (MATCH). No rebuild since; ping still armed.
+
+Report is at the bottom of tasks/T-002.md. Starting T-003 next (225 objs → imports.txt + D2-tasklist.md); T-004 after that.
+
+---
+

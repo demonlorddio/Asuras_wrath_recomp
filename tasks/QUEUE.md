@@ -16,7 +16,8 @@
 ## Freebuff — work these IN ORDER, repo-local only (zero conflict with Agnes)
 - [x] **T-002** PPU disassembly pipeline + PPUAnalyser dumps → `re/disasm/`, `re/ppuanalyser/`
       (done 2026-11-09: 39,248 functions, 262 syscall sites, PPU hash MATCH — report at the bottom of T-002.md)
-- [ ] **T-003** static link 225 objects → import inventory → `re/imports.txt` + `docs/D2-tasklist.md`
+- [x] **T-003** static link 225 objects → import inventory → `re/imports.txt` + `docs/D2-tasklist.md`
+      (done 2026-11-09: `ld.lld -r`, 480 imports, 52 lv2 syscalls in 11 namespaces, 417 unresolved vaddrs)
 - [ ] **T-004** .rodata candidate sweep → `re/candidates.csv` (+ top-5 rationale in `docs/`)
 
 Each T-xxx file is self-contained (inputs, outputs, acceptance). Claim = flip
