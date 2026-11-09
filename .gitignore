@@ -11,5 +11,6 @@ build/
 __pycache__/
 *.dat
 !docs/*.md
-# agent message-bus lock (transient)
+# agent message-bus lock + read cursor (transient)
 docs/comms/.thread.lock
+docs/comms/.cursor
