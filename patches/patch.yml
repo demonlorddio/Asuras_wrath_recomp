@@ -1,0 +1,19 @@
+# Asura's Wrath — v1.2 patch pipeline probe (Phase 1)
+# Engine: Utilities/bin_patch.cpp (patch_engine_version "1.2")
+# Main key = PPU executable hash (confirmed 4 independent signals, see re/ppu-hash.txt).
+# This is a guaranteed no-op probe: be32 self-write of 0x00000000 at PPU vaddr
+# 0x10100 (seg0 + 0x100, the 4 zero bytes inside the module image's phdr area).
+# It fully exercises load -> config lookup -> apply -> applied counter -> success logs.
+# To be replaced by the real 60 FPS .rodata constant once T-004 lands.
+Version: "1.2"
+
+PPU-83096111daff850cc92b637aec1780c4079e1c58:
+  "Pipeline Probe (Phase 1)":
+    Games:
+      "Asura's Wrath":
+        BLUS30721:
+          - All
+    Author: "dio"
+    Notes: "Phase 1 pipeline probe: be32 self-write no-op at PPU vaddr 0x10100. Replace with T-004 RE-verified addresses."
+    Patch:
+      - [ be32, 0x10100, 0x00000000 ]

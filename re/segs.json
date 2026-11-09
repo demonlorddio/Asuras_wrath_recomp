@@ -1,0 +1,128 @@
+{
+  "source_elf": "/home/dio/.claude/profiles/omniroute-coding/jobs/3bbdb40a/tmp/ebootwork/EBOOT.elf",
+  "file_size": 27141464,
+  "entry": 26820920,
+  "os_abi": "0x66",
+  "phnum": 8,
+  "ppu_hash": "PPU-83096111daff850cc92b637aec1780c4079e1c58",
+  "expected": "PPU-83096111daff850cc92b637aec1780c4079e1c58",
+  "match": true,
+  "phdrs": [
+    {
+      "idx": 0,
+      "p_type": 1,
+      "p_flags": 4194309,
+      "p_offset": 0,
+      "p_vaddr": 65536,
+      "p_paddr": 65536,
+      "p_filesz": 26349032,
+      "p_memsz": 26349032,
+      "p_align": 65536
+    },
+    {
+      "idx": 1,
+      "p_type": 1,
+      "p_flags": 6291462,
+      "p_offset": 26411008,
+      "p_vaddr": 26476544,
+      "p_paddr": 26476544,
+      "p_filesz": 715392,
+      "p_memsz": 2606488,
+      "p_align": 65536
+    },
+    {
+      "idx": 2,
+      "p_type": 1,
+      "p_flags": 4,
+      "p_offset": 27126400,
+      "p_vaddr": 0,
+      "p_paddr": 0,
+      "p_filesz": 0,
+      "p_memsz": 0,
+      "p_align": 65536
+    },
+    {
+      "idx": 3,
+      "p_type": 1,
+      "p_flags": 6,
+      "p_offset": 27126400,
+      "p_vaddr": 0,
+      "p_paddr": 0,
+      "p_filesz": 0,
+      "p_memsz": 0,
+      "p_align": 65536
+    },
+    {
+      "idx": 4,
+      "p_type": 1,
+      "p_flags": 106954758,
+      "p_offset": 27126400,
+      "p_vaddr": 0,
+      "p_paddr": 0,
+      "p_filesz": 0,
+      "p_memsz": 0,
+      "p_align": 65536
+    },
+    {
+      "idx": 5,
+      "p_type": 7,
+      "p_flags": 4,
+      "p_offset": 26876004,
+      "p_vaddr": 26941540,
+      "p_paddr": 26941540,
+      "p_filesz": 680,
+      "p_memsz": 680,
+      "p_align": 8
+    },
+    {
+      "idx": 6,
+      "p_type": 1610612737,
+      "p_flags": 0,
+      "p_offset": 26348928,
+      "p_vaddr": 26414464,
+      "p_paddr": 26414464,
+      "p_filesz": 40,
+      "p_memsz": 40,
+      "p_align": 8
+    },
+    {
+      "idx": 7,
+      "p_type": 1610612738,
+      "p_flags": 0,
+      "p_offset": 26348968,
+      "p_vaddr": 26414504,
+      "p_paddr": 26414504,
+      "p_filesz": 64,
+      "p_memsz": 64,
+      "p_align": 4
+    }
+  ],
+  "load_segments": [
+    {
+      "idx": 0,
+      "vaddr": 65536,
+      "memsz": 26349032,
+      "filesz": 26349032,
+      "flags": 4194309,
+      "p_type": 1,
+      "file": 0,
+      "file_end": 26349032,
+      "bytes": 26349032,
+      "out": "seg_000000010000.bin",
+      "blob_sha1": "d42caf7c0c22d51fb2157b8c120bff9c72cd7c00"
+    },
+    {
+      "idx": 1,
+      "vaddr": 26476544,
+      "memsz": 2606488,
+      "filesz": 715392,
+      "flags": 6291462,
+      "p_type": 1,
+      "file": 26411008,
+      "file_end": 27126400,
+      "bytes": 715392,
+      "out": "seg_000001940000.bin",
+      "blob_sha1": "b769b3ef57896e810a1b4a7561a956d36736d5d4"
+    }
+  ]
+}
