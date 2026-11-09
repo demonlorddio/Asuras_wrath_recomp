@@ -18,7 +18,9 @@
       (done 2026-11-09: 39,248 functions, 262 syscall sites, PPU hash MATCH — report at the bottom of T-002.md)
 - [x] **T-003** static link 225 objects → import inventory → `re/imports.txt` + `docs/D2-tasklist.md`
       (done 2026-11-09: `ld.lld -r`, 480 imports, 52 lv2 syscalls in 11 namespaces, 417 unresolved vaddrs)
-- [ ] **T-004** .rodata candidate sweep → `re/candidates.csv` (+ top-5 rationale in `docs/`)
+- [x] **T-004** .rodata candidate sweep → `re/candidates.csv` (+ top-5 rationale in `docs/`)
+      (done 2026-11-10: 4,585 hits / 124,520 refs; spec's float encodings were wrong and are
+      corrected; only `cheat_60fps` has a candidate `0x19afbac`, other slots left TBD on purpose)
 
 Each T-xxx file is self-contained (inputs, outputs, acceptance). Claim = flip
 `Status:` in the file to `in_progress (Freebuff)`; leave findings + a report
