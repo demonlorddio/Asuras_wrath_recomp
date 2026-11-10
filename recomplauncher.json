@@ -1,0 +1,133 @@
+{
+  "$schema": "https://recomplauncher.com/schema/recomplauncher.json",
+  "format": 1,
+  "name": "Asura's Wrath Recompiled",
+  "repo": "demonlorddio/Asuras_wrath_recomp",
+  "game": {
+    "kind": "iso_or_folder",
+    "label": "Your own copy of Asura's Wrath for PlayStation 3 (BLUS30721, USA): the .iso, or the game folder that has PS3_GAME in it.",
+    "check": { "file": "PS3_GAME/PARAM.SFO" }
+  },
+  "start": {
+    "program": ["asuraswrath"],
+    "args": ["--game", "{game}"]
+  },
+  "prepare": {
+    "program": ["asuraswrath"],
+    "args": ["--prepare", "--game", "{game}"],
+    "label": "Compiling the game into a native module",
+    "timeout": 1800
+  },
+  "config": [
+    {
+      "id": "main",
+      "format": "json",
+      "file": [{ "path": "{install}/settings.json" }],
+      "new": {
+        "fullscreen": "true",
+        "vsync": "false",
+        "perf_overlay": "false",
+        "resolution_scale": "150",
+        "vblank_rate": "60",
+        "anisotropic_filter": "16",
+        "upscaling": "\"FSR\"",
+        "cheat_60fps": "true"
+      }
+    }
+  ],
+  "settings": [
+    {
+      "id": "resolution",
+      "label": "Resolution",
+      "help": "What the game draws at. 720p is the console's own; 4K needs a fast graphics card.",
+      "choices": [
+        { "label": "720p", "set": { "resolution_scale": "100" } },
+        { "label": "1080p", "set": { "resolution_scale": "150" } },
+        { "label": "1440p", "set": { "resolution_scale": "200" } },
+        { "label": "4K", "set": { "resolution_scale": "300" } }
+      ],
+      "defaults": { "resolution_scale": "150" }
+    },
+    {
+      "id": "frame_rate",
+      "label": "Frame rate",
+      "help": "The console ran at 30 FPS. The unlock raises the frame-rate target and the game's own sleep pacing together, so menus and loading speed up with it.",
+      "choices": [
+        { "label": "60 FPS unlock", "set": { "cheat_60fps": "true" } },
+        { "label": "As on console", "set": { "cheat_60fps": "false" } }
+      ],
+      "defaults": { "cheat_60fps": "true" }
+    },
+    {
+      "id": "refresh",
+      "label": "Refresh rate",
+      "help": "The rate the game presents at. Match it to your screen.",
+      "choices": [
+        { "label": "60 Hz", "set": { "vblank_rate": "60" } },
+        { "label": "120 Hz", "set": { "vblank_rate": "120" } },
+        { "label": "144 Hz", "set": { "vblank_rate": "144" } },
+        { "label": "240 Hz", "set": { "vblank_rate": "240" } }
+      ],
+      "defaults": { "vblank_rate": "60" }
+    },
+    {
+      "id": "window",
+      "label": "Window",
+      "help": "Fullscreen hides the desktop; Windowed makes it easy to switch away.",
+      "choices": [
+        { "label": "Fullscreen", "set": { "fullscreen": "true" } },
+        { "label": "Windowed", "set": { "fullscreen": "false" } }
+      ],
+      "defaults": { "fullscreen": "true" }
+    },
+    {
+      "id": "vsync",
+      "label": "V-Sync",
+      "help": "On tears less but can add a frame of input delay. Off suits a fast display.",
+      "choices": [
+        { "label": "Off", "set": { "vsync": "false" } },
+        { "label": "On", "set": { "vsync": "true" } }
+      ],
+      "defaults": { "vsync": "false" }
+    },
+    {
+      "id": "upscaling",
+      "label": "Upscaling",
+      "help": "How the picture is fitted to your screen. FSR sharpens it, especially above 720p.",
+      "choices": [
+        { "label": "FSR", "set": { "upscaling": "\"FSR\"" } },
+        { "label": "Bilinear", "set": { "upscaling": "\"Bilinear\"" } },
+        { "label": "Nearest", "set": { "upscaling": "\"Nearest\"" } }
+      ],
+      "defaults": { "upscaling": "\"FSR\"" }
+    },
+    {
+      "id": "overlay",
+      "label": "Performance overlay",
+      "help": "Shows the frame rate and frame time over the game. F1 toggles it while playing.",
+      "choices": [
+        { "label": "Off", "set": { "perf_overlay": "false" } },
+        { "label": "On", "set": { "perf_overlay": "true" } }
+      ],
+      "defaults": { "perf_overlay": "false" }
+    }
+  ],
+  "saves": [
+    "{config}/rpcs3/dev_hdd0/home/00000001/savedata",
+    "{install}/settings.json",
+    "{install}/recomp.cfg"
+  ],
+  "folders": {
+    "saves": [{ "path": "{config}/rpcs3/dev_hdd0/home/00000001/savedata" }],
+    "logs": [{ "path": "{home}/.cache/rpcs3" }]
+  },
+  "exit_codes": {
+    "2": "It couldn't find your copy of Asura's Wrath. Pick it again on the game's page.",
+    "3": "The one-time compile into a native module failed. The engine's log is in the Logs folder."
+  },
+  "looks": { "graphics": "vulkan" },
+  "actions": [
+    { "id": "saves", "label": "Saves", "help": "Your Asura's Wrath save data.", "open": "saves" },
+    { "id": "logs", "label": "Logs", "help": "The engine's log, useful when something breaks.", "open": "logs" }
+  ]
+}

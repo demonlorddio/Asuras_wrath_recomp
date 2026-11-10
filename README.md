@@ -1,7 +1,15 @@
 # Asuras_wrath_recomp — multi-agent workspace
 
+<a href="https://recomplauncher.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://recomplauncher.com/assets/press/launcher/badge-light.svg"><img alt="Get it on RecompLauncher" src="https://recomplauncher.com/assets/press/launcher/badge-dark.svg" height="48"></picture></a>
+
 Goal: Asura's Wrath (BLUS30721) running on an **owned native-build runtime** with
 full control over cheats and graphics settings. Decision artifact: `docs/NATIVE-PLAN.md`.
+
+**RecompLauncher:** `recomplauncher.json` at the repo root is the manifest for
+[RecompLauncher](https://recomplauncher.com) (setup, settings, save locations).
+Copy it to the top of every release, next to `asuraswrath`, so the player drops in
+their own disc and presses Play. The launcher needs the `--game` / `--prepare`
+flags in `asuraswrath` described there; without them it behaves exactly as before.
 
 ## Read first
 - `docs/NATIVE-PLAN.md` — plan, root causes (R1–R7), options A/B/D, phases
