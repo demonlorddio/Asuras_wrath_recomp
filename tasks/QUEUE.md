@@ -73,6 +73,31 @@
       Freebuff finds its caller in `re/t005-sleep-sites.csv` and we
       bake the fix; av ~30 → the word isn't the pacing constant, send
       the §5 trace. MSG-0019 + MSG-0020 posted.
+      **P2 CONFIRMED (user title-screen read, 16:4x):** framerate box
+      av 54.7 / mn 27.3 / mx 60.0, frametime av 17.3 ms, overlay
+      "FPS 56.97 / PPU 3.0%" — title/boot loop now caps at 60.
+      `0x8a9438` is the load-bearing frame-budget word; P2's value
+      (500000.0 = halved 1e6 rate) is the title-loop 60fps fix. Two
+      open questions → Freebuff (MSG-0021): (a) is 500000.0 final or
+      tune it (what is the native word?); (b) does 0x8a9438 also
+      govern the GAMEPLAY loop (supersedes 0x19afbac=60.0f) or is it
+      title-only (final = P2 title + 0x19afbac gameplay). Until (b),
+      P2 stays in PROBE_LINES (regeneration-proof); repo template
+      keeps its final-target shape.
+      **CHEAT-SLOT STATUS (T-006, user-priority, MSG-0021 on bus):**
+      launcher now has 7 slots — `cheat_extras` ("Unlock All Extras")
+      was GUI-complete (checkbox + default True + save key) but
+      missing from CHEAT_LINES/CHEAT_LABELS; wired this session (empty
+      slot emits no block, same as the other five). T-006 covers six:
+      skip_intro, one_shot, heavy, burst, god, extras.
+      candidates.csv census: the sweep covered only float constants
+      (1.0/0.5/-1.0, 60/30 as int+float, 1/30 & 1/60 s, 120.0f, a few
+      doubles) — god/skip/one-shot values appear in no swept pattern,
+      consistent with T-004 ("runtime/heap state machines, not
+      .rodata"). Disc = single PPU module, 0 .sprx, so the SPU-side
+      angle means SPU code generated from the PPU image; the
+      function-prologue/code-branch angle is likely (code patches are
+      fine in the runtime engine; D-line bake caveat applies).
 - [ ] D merge gates C1–C4 (when Option D launches)
 
 ## Freebuff — work these IN ORDER, repo-local only (zero conflict with Agnes)
@@ -90,14 +115,20 @@
       scaler. Two one-word probes + a debugger recipe in
       `docs/t005-frame-pacing.md` — **P1 = no-op `0x8a9458`, one boot decides
       whether the cap is a sleep or an event wait.**)
-- [ ] **T-006** candidate addresses for the five open cheat slots
-      (skip_intro, one_shot, heavy [no heavy-blow cooldown], burst, god) —
+- [ ] **T-006** candidate addresses for the open cheat slots
+      (skip_intro, one_shot, heavy [no heavy-blow cooldown], burst, god,
+      + extras ["Unlock All Extras" — launcher slot wired this session]) —
       T-004 left them TBD; `.rodata` sweep already done (4,585 hits), so this
-      is a fresh sweep or a different search (e.g. SPU-side values, function
-      entry prologues) against `re/disasm/` + `re/ppuanalyser/`. User-visible
-      "cheats don't work" is these five slots being empty, not a pipeline
-      fault. Claim = flip Status in `re/` task file (create `T-006.md`),
-      branch `T-006`.
+      is a fresh sweep or a different search (e.g. SPU-side values generated
+      from the PPU image, function entry prologues, branch-target patching)
+      against `re/disasm/` + `re/ppuanalyser/` (39,248 functions in
+      functions.csv; candidates.csv census shows the god/skip/one-shot
+      values appear in no swept float constant). User-visible
+      "cheats don't work" is these slots being empty, not a pipeline
+      fault. User-priority (MSG-0021): start with god/skip_intro, post
+      candidate addresses to the bus as they land — Agnes wires +
+      boot-verifies each. Claim = flip Status in `re/` task file
+      (create `T-006.md`), branch `T-006`.
 
 Each T-xxx file is self-contained (inputs, outputs, acceptance). Claim = flip
 `Status:` in the file to `in_progress (Freebuff)`; leave findings + a report
