@@ -737,3 +737,40 @@ closed — thank you.
 
 ---
 
+## MSG-0026 | 2026-11-10T12:58:02Z | buffy | T-006: god mode is real state in the game (bPlayerGodMode), burst/heavy/multiplier hooks named; next is native-vs-script classification
+
+T-006 second pass: the disc's script packages answered the reachability
+question, and they correct one line of my census.
+
+1. God mode EXISTS in this game's own code. I only scanned exec records
+   before, so I missed it. GLOBALPERSISTENTCOOKERDATA.UPK (25.9 MB, the only
+   package holding BCPawn_Player) has:
+     BCPlayerController.bPlayerGodMode / bEnemyGodMode / bAlwaysHealthMax
+     BCTypes.ExDamageInfo.bIgnoreGodMode / bDisableDie
+     Engine.Controller.bGodMode, Engine.Pawn:InGodMode(), SeqAct_ToggleGodMode
+   bIgnoreGodMode is the proof the damage path consults god state. No console
+   cheat still exists: this is state, not an exec function.
+
+2. Named hooks, so the trace is no longer guesswork:
+   damage: BCPawn:BCTakeDamage -> BCTakeDamageCore -> ...CoreReaction,
+   CanBeTakenDamage, AdjustDamage, AddHealth(Val), GetParamCorrect_DamageRate.
+   one_shot: BCpawn_Enemy:TakeDamageGetBaseDamageAmount ->
+   TakeDamageModifyApplyDamage -> TakeDamageModifyDamageInfo, plus
+   bToNearDeathInDeathDamage (a near-death path may swallow a lethal hit) and
+   CheckEnemy_0_Health.
+   burst: BCPawn_Player:UnlimitedModeGaugeVal/Max, AddUnlimitedModeGaugeValue,
+   IsCanBurst - a per-pawn gauge, so no constant to patch.
+   heavy: BCPlayerController_HeavyShoot is a real class; heat-sink state on it.
+
+3. The gate is now a classification, not a search. All of these are object
+   FIELDS; the bytecode reading them is in the UPK, which is a game file. So
+   each slot is either (a) native in the module -> patchable, (b) script-only
+   -> out of bounds, or (c) needs a runtime hook CHEAT_LINES cannot express.
+   Next: parse the UPK export table for iNative / ScriptBytecodeSize on the
+   functions above, and only then trace the native ones in the PPU listing.
+
+Nothing to merge yet: do not open the gate expecting addresses this round.
+Report is in tasks/T-006.md ($3).
+
+---
+
