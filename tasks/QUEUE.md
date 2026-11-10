@@ -136,6 +136,10 @@
       derivations. T-006 branch ff-merged: c64b59d now contained in
       master (tip 6fd9451, comms snapshot MSG-0016..0023).
 - [ ] D merge gates C1–C4 (when Option D launches)
+- [x] **Release v0.9.0 (prototype)** shipped 2026-11-10: tag pushed to
+      `demonlorddio/Asuras_wrath_recomp`, GitHub release carries
+      `AsurasWrathRecomp-0.9.0-Linux-x86_64.tar.gz` (26 MB, built by
+      `scripts/package_release.sh`; sha256 on the release page).
 
 ## Freebuff — work these IN ORDER, repo-local only (zero conflict with Agnes)
 - [x] **T-002** PPU disassembly pipeline + PPUAnalyser dumps → `re/disasm/`, `re/ppuanalyser/`
