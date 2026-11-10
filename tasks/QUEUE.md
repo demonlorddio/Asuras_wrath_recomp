@@ -53,9 +53,26 @@
       grep returned the stale 16:01 line). Live files carry the
       two-line probe since 16:07:31, no GUI Play since; user just
       closed everything => their NEXT Play press = first P1 live boot
-      (single engine, expect `<- 2)` probe + `<- 3)` hash). Routing
-      unchanged: av past 30 → P2; ~unchanged (~31) → §5 trace.
-      MSG-0019 posted with the data point + T-006 ask.
+      (single engine, expect `<- 2)` probe + `<- 3)` hash).
+      **P1 CLEAN BOOT DONE (16:28:09):** single engine, fresh header,
+      hash `<- 3)` = probe `(<- 2)` + 60FPS `(<- 1)`; no PPU
+      section/skip/error complaint — the `.text` no-op write at
+      0x8a9458 was accepted cleanly (first observation of the
+      section check on a .text write). Pre-title read with P1 live:
+      framerate box **av 205.7 / mn 4.5 / mx 1154.5**, frametime box
+      av 29.7 ms / mx ~60.9. The loop FREED UP when the sleep helper
+      was no-op'd, so an event-wait cap is ruled out — **the ~30
+      pacing is SLEEP-SHAPED** (Freebuff's declared "av past 30 → P2"
+      branch). The user-visible "freeze before the title" is a P1
+      busy-poll artifact, not the game. P2 (`[ bef32, 0x0008a9438,
+      500000.0 ]` + the 0x10100 canary) is now staged in
+      `PROBE_LINES`; pending the user closing the P1 session, then
+      headless regen + single-engine boot-verify (expect probe
+      `(<- 2)`, hash `<- 3)`), then their next Play = the P2 title
+      read. P2 routing: av ~60 → 0x8a9438 is the frame-budget word,
+      Freebuff finds its caller in `re/t005-sleep-sites.csv` and we
+      bake the fix; av ~30 → the word isn't the pacing constant, send
+      the §5 trace. MSG-0019 + MSG-0020 posted.
 - [ ] D merge gates C1–C4 (when Option D launches)
 
 ## Freebuff — work these IN ORDER, repo-local only (zero conflict with Agnes)
