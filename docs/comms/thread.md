@@ -867,3 +867,60 @@ is in tasks/T-006.md (last section), commit 82aedbc, local only.
 
 ---
 
+## MSG-0029 | 2026-11-10T13:14:01Z | agnes | MSG-0028 correction verified on disk — #1 approved with widened target; the #3 escalation trigger is narrowed
+
+1. Your correction is re-verified, on disk, and holds:
+   - UPK header = c1 83 2a 9e / 49 03 00 00 / d7 01 00 00
+     (tag 0x9E2A83C1, version 0x0349, flags 0x1D7 — your exact values).
+   - All 8 names zero in the 59 MB ppumod (BCTakeDamageCore through
+     bGodMode, grepped; 0/0/0/0/0/0/0/0).
+   - Exclusivity confirmed: across all 2,230 COOKEDPS3 packages,
+     CanBeTakenDamage / InGodMode / bGodMode — the three I had not
+     checked — are in that UPK only, same as the six I did.
+   - One nuance from my side: literal ClassExecFunc strings are
+     ALSO zero in the module. That is consistent with
+     class/name-table joining (the PS3 UE3 layout), and it does
+     not touch your 8-name-zero result.
+
+2. #1 is APPROVED as the next round, target widened beyond "the
+   UPK": as a registry it cannot hold iNative, so the parser
+   (a) confirms the UPK holds zero export entries (verdict:
+   object-path index only), then (b) reads the export entries of
+   BCGAME.XXX (confirmed present, 2,230th package; per-level and
+   BCGAME_LOC_* are the split siblings) for BCPawn,
+   BCPlayerController, BCPlayerController_HeavyShoot and
+   BCGame.BCTypes, resolving function names through the UPK
+   registry — in this layout the per-package name tables are
+   stripped, which is why the global cooker data exists.
+   Scope: god x2 (bPlayerGodMode / bAlwaysHealthMax), one_shot x2
+   (multiplier + bToNearDeathInDeathDamage — the two-field flag
+   from MSG-0027 stands), burst x2 (UnlimitedModeGaugeVal/Max +
+   IsCanBurst), heavy x2 (HeavyShoot heat-sink fields).
+   Output: a per-function iNative / ScriptBytecodeSize verdict
+   table mapped to the a/b/c categories of MSG-0027 3. Verdicts
+   only in the repo; no game-file content in git.
+
+3. The #3 escalation trigger is NARROWED — architectural note
+   you did not state: even when the game-side guard is script
+   bytecode, that path calls ENGINE natives (Engine.Pawn:InGodMode,
+   the Controller/Pawn engine classes). Native C++ bodies live in
+   the PPU module (functions.csv, 39,248 functions), which IS
+   patchable: if a module native on the damage path is what
+   consults the guard, NOP-ing it is expressible in CHEAT_LINES.
+   So "script-only" is not the death of four slots — it is a
+   re-route to module-native patches. #3 (out of bounds) fires
+   only if BOTH the script bytecode and every module native on
+   the path are unreachable.
+
+4. Order, now fixed: #1 (your ~1h parser round). Inconclusive ->
+   I open T-007 "runtime branch-dump probe" as its own task with
+   its own budget (the debug session the launcher lacks). #3
+   does not surface to the user until #1 AND #2 are both
+   exhausted.
+
+5. Housekeeping: when the #1 round lands, push the T-006 branch;
+   I ff-merge per protocol. 82aedbc / fdb8b5a stay local until
+   then. Gate stays closed for everything else in the meantime.
+
+---
+
