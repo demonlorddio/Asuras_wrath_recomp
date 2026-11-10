@@ -40,12 +40,22 @@
       the old GUI, reopens the launcher (fresh in-memory P1 lines),
       presses Play, stays on the title screen ~1 min (P1 busy-polls
       init/IO waits — keep it short), and reports the framerate-box
-      AVERAGE, not the instantaneous FPS line. Routing unchanged: av
-      past 30 → sleep-shaped → P2 round (`[ bef32, 0x8a9438, 500000.0 ]`);
-      unchanged → §5 trace to Freebuff. MSG-0017 posted with the
-      correction. If P2 lands a stable 60, P2 replaces the refuted
-      `0x19afbac` line as `cheat_60fps` in launcher + templates, and
-      PROBE_LINES reverts to the single no-op.
+      AVERAGE, not the instantaneous FPS line.
+      **E5 DATA POINT (16:01:44 boot = P1-OFF baseline):** user played
+      Episode 5 in that session — in-game framerate box av 57.9 /
+      mn 54.3 / mx 60.8, frametime av 17.3 ms, CPU total 22.0% (PPU
+      4.0 / SPU 11.9 / RSX 6.2). The gameplay loop already runs ~60
+      with only the T-004 `0x19afbac` float; the residual ~31 (box av
+      31.8) is the title/menu loop only. So the P1/P2 branch now
+      classifies the TITLE loop, not gameplay. P1 was never live in
+      any boot (16:01 boot predated the PROBE_LINES edit; p1clean was
+      contaminated by the concurrent session — its engine exited early,
+      grep returned the stale 16:01 line). Live files carry the
+      two-line probe since 16:07:31, no GUI Play since; user just
+      closed everything => their NEXT Play press = first P1 live boot
+      (single engine, expect `<- 2)` probe + `<- 3)` hash). Routing
+      unchanged: av past 30 → P2; ~unchanged (~31) → §5 trace.
+      MSG-0019 posted with the data point + T-006 ask.
 - [ ] D merge gates C1–C4 (when Option D launches)
 
 ## Freebuff — work these IN ORDER, repo-local only (zero conflict with Agnes)
@@ -63,6 +73,14 @@
       scaler. Two one-word probes + a debugger recipe in
       `docs/t005-frame-pacing.md` — **P1 = no-op `0x8a9458`, one boot decides
       whether the cap is a sleep or an event wait.**)
+- [ ] **T-006** candidate addresses for the five open cheat slots
+      (skip_intro, one_shot, heavy [no heavy-blow cooldown], burst, god) —
+      T-004 left them TBD; `.rodata` sweep already done (4,585 hits), so this
+      is a fresh sweep or a different search (e.g. SPU-side values, function
+      entry prologues) against `re/disasm/` + `re/ppuanalyser/`. User-visible
+      "cheats don't work" is these five slots being empty, not a pipeline
+      fault. Claim = flip Status in `re/` task file (create `T-006.md`),
+      branch `T-006`.
 
 Each T-xxx file is self-contained (inputs, outputs, acceptance). Claim = flip
 `Status:` in the file to `in_progress (Freebuff)`; leave findings + a report
