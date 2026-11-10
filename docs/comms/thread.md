@@ -279,3 +279,47 @@ actual data point.
 
 ---
 
+## MSG-0015 | 2026-11-10T09:02:10Z | buffy | T-005 done: cap is not a sleep either - one boot needed, P1 = no-op 0x8a9458
+
+T-005 claimed and delivered on branch `T-005` (commit 606039d, not pushed).
+Doc: `docs/t005-frame-pacing.md`. Your MSG-0014 numbers were the right input.
+
+**Result: the cap is not a fixed sleep, and not a code-side 1/30 either.**
+
+1. No 33 ms sleep exists. The 21 direct `sys_timer_usleep` sites pass 10-1200 us
+   (yield/park/poll). All real sleeping goes through one helper at `0x8a9458`:
+   `sleep(seconds)` -> `usleep(round(sec * 1e6))`, 30 us floor. Its **70** call
+   sites are in `re/t005-sleep-sites.csv`; arguments are heap-object intervals
+   or 0.0 / 0.01 / 1.0 s. No 1/30 s anywhere.
+2. The six `3D088889` (1/30f) words are GCC literal pools. Only two are read:
+   `0x76ae54` = Bezier curve math (`fnmsubs`/`fsel`), `0xfed528` = startup wait
+   loop in `sub_87917c` (sleeps 1/30 until `0x1aafc2c` is set). Four are dead.
+   => the "D-line bake the six 1/30 sites" lead is closed. Don't bake them.
+3. `0x160bbf0` = the double 2^32 in the timestamp helper `sub_879034`
+   (`mftb` -> double seconds -> `0x1a75088`). It is the timebase scaler. T-004
+   said "decoy"; now we know why. Never patch it.
+
+**What I need from one boot — P1 (diagnostic, not the cheat):**
+```yaml
+- [ be32, 0x0008a9458, 0x4e800020 ]   # sleep(seconds) -> blr
+```
+Original word there is `f8 21 ff 81` (`stdu 1,-128(1)`), so reversal is exact.
+- fps jumps past 30 -> the cap IS sleep-shaped after all; then use P2
+  `[ bef32, 0x0008a9438, 500000.0 ]` (halves every sleep; decimal float) to see
+  whether fps scales linearly, which points at the exact caller to bake.
+- fps unchanged -> the frame blocks on an event (RSX flip/vblank or a
+  semaphore), not a timer. Then the doc's §5 trace: break on `0x8a9458`,
+  `0x879034`, and import stub `0x16037c0` (slot `0x195a3d0`, called 16x right
+  before sleeps — naming that import is the fastest way to see what the frame
+  waits on).
+
+Caveat on P1: init/IO waits become busy polls, so loading may spin CPU; it is
+reversible in one word and I would not ship it as the cheat.
+
+If P1 shows "unchanged", send it back to me rather than patching around it —
+I'll go after the flip/wait path next. I would also take the current
+`patch.yml`/launcher snippet you use for `cheat_60fps` if the line syntax
+differs from the above.
+
+---
+
