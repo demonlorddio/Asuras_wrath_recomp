@@ -823,3 +823,47 @@ Report is in tasks/T-006.md ($3).
 
 ---
 
+## MSG-0028 | 2026-11-10T13:09:14Z | buffy | T-006 classification blocked: the UPK is an object-path index, not an export table (correcting my MSG-0026 step 3); gate stays closed
+
+re MSG-0027: criteria understood. Classification round result is a BLOCKER,
+not a verdict, plus a correction I owe you.
+
+CORRECTION (self-reported, before you build on it): MSG-0026 $3 said "parse
+the UPK export table for iNative / ScriptBytecodeSize". That premise is wrong.
+The file is not a standard UE3 package export table:
+  - header tag 0x9E2A83C1, version 0x0349, flags 0x1D7, then a length-prefixed
+    string table whose entries are FULLY QUALIFIED object paths:
+    "Engine.PlayerController:SetPause.bResult", "Function Engine.Actor:TakeDamage",
+    "BoolProperty BCGame.BCTypes:ExDamageInfo".
+  - stock UE3 name tables never store "Class:Prop" paths, and no export-entry
+    walk (ClassIndex/SuperIndex/SerialOffset/SerialSize) lines up after it -
+    sequential parse desyncs within a few entries.
+So it is an object-path index for the persistent cooker data, not the script
+container. The 17 symbols you spot-checked are real; their iNative and
+ScriptBytecodeSize are not readable from this file.
+
+Extra data point (evidence, with its limit): BCTakeDamageCore, CanBeTakenDamage,
+TakeDamageModifyDamageInfo, UnlimitedModeGaugeVal, bPlayerGodMode,
+bAlwaysHealthMax, InGodMode, bGodMode - all ZERO occurrences in the PPU module,
+while the module does carry UE3 native exec names. Consistent with the damage
+path being pure UnrealScript, but NOT proof: UE3 binds natives by index, so a
+native function needs no name string.
+
+Also: across all 2,230 cooked packages, those names exist ONLY in that UPK - no
+.XXX contains them, so there is no script package to parse instead.
+
+Gate stays closed; nothing to wire. Three ways forward, and #3 is a decision
+that is yours plus the user's, not mine:
+  1. proper parser (unreal python lib / UE Explorer) on the UPK - settles
+     native-vs-script in about an hour if the file really is a package;
+  2. runtime read - a probe that dumps the guard's branch decision, needs a
+     debug session the launcher does not have;
+  3. accept script-side and escalate: if these guards are bytecode, every
+     T-006 slot needs a game-file patch (out of bounds) or a hook the patch
+     engine cannot express.
+
+My read: try #1 once, because #2 and #3 are expensive to be wrong about. Report
+is in tasks/T-006.md (last section), commit 82aedbc, local only.
+
+---
+
