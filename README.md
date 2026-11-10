@@ -5,11 +5,21 @@
 Goal: Asura's Wrath (BLUS30721) running on an **owned native-build runtime** with
 full control over cheats and graphics settings. Decision artifact: `docs/NATIVE-PLAN.md`.
 
+## How to play
+
+You need your own copy of **Asura's Wrath for PlayStation 3 (BLUS30721, USA)**: the
+`.iso`, or the game folder that has `PS3_GAME` in it. Nothing of the game is in this
+package. Run `asuraswrath` (or `asuraswrath --game /path/to/game.iso`), pick your
+copy when asked, and the first start compiles it into a native module — 5–15 minutes,
+once. Every later start goes straight to the game. Requires Vulkan; no admin rights,
+no installer.
+
 **RecompLauncher:** `recomplauncher.json` at the repo root is the manifest for
 [RecompLauncher](https://recomplauncher.com) (setup, settings, save locations).
-Copy it to the top of every release, next to `asuraswrath`, so the player drops in
-their own disc and presses Play. The launcher needs the `--game` / `--prepare`
-flags in `asuraswrath` described there; without them it behaves exactly as before.
+`scripts/package_release.sh` copies it to the top of the release archive, next to
+`asuraswrath`, so the player drops in their own disc and presses Play. The launcher
+needs the `--game` / `--prepare` flags in `asuraswrath` described there; without them
+it behaves exactly as before.
 
 ## Read first
 - `docs/NATIVE-PLAN.md` — plan, root causes (R1–R7), options A/B/D, phases
@@ -25,6 +35,7 @@ tasks/  work packages; QUEUE.md is the master board; T-xxx files are self-contai
 src/    Option-D runtime source (OUR code only)
 re/     RE outputs: disasm/, candidates.csv, imports.txt (text committed; big binaries gitignored)
 scripts/ reusable analysis scripts (run against paths.env targets, never from inside game data)
+        package_release.sh builds the RecompLauncher-ready release archive
 ```
 
 ## Rules (all agents: Agnes, Freebuff, Omnirush)
