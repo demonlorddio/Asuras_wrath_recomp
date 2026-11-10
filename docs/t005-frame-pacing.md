@@ -127,6 +127,23 @@ linear fps response is the fingerprint of a frame-budget sleep and tells us
 the exact call site to bake. If fps does not scale, the cap is not sleep-shaped
 and this probe is also a no-op.
 
+### Reading the result (the failure mode that already bit us)
+
+MSG-0017: the first "60.00 fps" P1 read was **not** a P1 boot. The launcher GUI
+regenerates the live patch files from its in-memory line list on every Play
+press, so a GUI opened before the probe was wired silently rewrote the config
+back to the refuted 60FPS block; the boot applied only 1 line (`<- 2)` hash) and
+the instantaneous title-loop number showed 60 while the **framerate-box
+average** stayed at ~31.8, i.e. the baseline. Two rules follow:
+
+* the routing number is the box average (`av:`), never the big instant FPS;
+* confirm from the engine log that the probe actually applied (expected
+  `probe <- 1)`/`<- 2)` **and** a changed hash) before believing any fps read.
+
+Probe lines must be handed to Agnes as **launcher list entries** (its
+`PROBE_LINES`), not as hand edits of the live `patch.yml` — a hand edit is
+wiped on the next Play press.
+
 ### Never patch, for the record
 
 `0x160bbf0` (2^32 timebase scaler, §3), `0x19ad530` / `0x19a8d88` (physics
@@ -156,7 +173,9 @@ debugger (PPU thread) and break on these, in order:
 
 ## 6. Status
 
-No proven 60 fps patch yet, and this document does not claim one. What it does
+No proven 60 fps patch yet, and this document does not claim one. (A "60.00
+fps" P1 read briefly circulated and was withdrawn as a P1-off baseline — see
+MSG-0017 and §4; treat any pre-MSG-0017 fps figure in this repo as baseline.) What it does
 provide is:
 
 * empirical closure of two hypotheses (fixed sleep; code-side 1/30 bake),
