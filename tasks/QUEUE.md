@@ -119,9 +119,16 @@
       block), `patches/README.md` (Verify: probe `(<- 1)` + 60FPS
       `(<- 2)` = hash `(<- 3)`), `docs/CHEAT-SPECS.md` (60fps row
       patched (finalized); others T-006 tracing; extras → wrong
-      layer) synced. Boot-verify pending: headless regen + single
-      engine, expect probe `(<- 1)`, 60FPS `(<- 2)`, hash `(<- 3)`,
-      zero errors.
+      layer) synced. **P2 FINAL BOOT-VERIFY CLOSED (2026-11-10,
+      22:47:43 boot):** the user's E5 one-toggle test boot satisfied
+      it — `('Pipeline Probe (Phase 1)') (<- 1)`,
+      `('60FPS Unlock') (<- 2)`, `ppu_loader: PPU executable hash:
+      PPU-83096111… (<- 3)`, zero `PAT: Error`/`Skipping`. In-game
+      E5 read: framerate box av 57.9–58.0, frametime av 17.3 ms, CPU
+      total 18.4–21.4% (PPU 3.3–3.9 / SPU 9.7–11.3 / RSX 5.4–6.2).
+      Note: that boot ran BASELINE (PPU Modules Mode Prefer + scale
+      150 + P2 live), not H3 — see the E5/H3 entry below; the 22:47
+      read is a baseline data point, not an H3 verdict.
       **T-006 PLAN ABSORBED (six slots, MSG-0023):** UE3 keeps
       UnrealScript names (2,396 exec records) — CheatManager ships
       navmesh debug only, NO gameplay cheat. god + one_shot = ONE
@@ -135,6 +142,37 @@
       empty slot gets wired until her addresses land with
       derivations. T-006 branch ff-merged: c64b59d now contained in
       master (tip 6fd9451, comms snapshot MSG-0016..0023).
+- [ ] **E5 SKYBOX ARTIFACT — H3 RE-STAGE (2026-11-10, MSG-0033 on the
+      bus).** H3 (toggle PPU Modules Mode → Never; one-toggle-per-boot
+      rule from Freebuff's MSG-0030) was invalidated by the launcher,
+      not by the payload: `configure_engine()` (asuraswrath lines
+      594–602) unconditionally rewrites `Core/PPU Modules Mode: Prefer`
+      on every GUI Play, so the 22:47 E5 boot ran BASELINE — proof:
+      two `ppumod: Hydrated 227 ppumod entries … (227 warm, 0 written)`
+      lines (RPCS3.log 5042–5043). The user's read "the red shader
+      glitch thingy was less but only a bit, still noticeable" is a
+      BASELINE data point (E5 av 57.9–58.0), not an H3 verdict. That
+      same log also carries `RSX TODO: Vertex textures … not
+      implemented for the shader interpreter.` ×2 — a candidate
+      smoking gun on the RSX/interpreter side (would persist under
+      Never; relevant to H2/H4). RE-STAGED: `~/.config/rpcs3/config.yml`
+      now `PPU Modules Mode: Never` (verified on disk, line 21). GUI
+      Play still forces Prefer → the H3 boot is a DIRECT engine
+      launch, no launcher:
+        cd /home/dio/Games/AsurasWrathRecomp-linux-x86_64
+        ./engine/rpcs3 --no-gui --fullscreen disc_extracted
+      Same E5 scene as the 3 user screenshots. Gate (I verify on
+      boot): NO `ppumod:` hydration lines (Never took effect) +
+      patches still clean (probe `(<- 1)`, 60FPS `(<- 2)`, hash
+      `(<- 3)`, zero errors). Decision rule (MSG-0030): artifact GONE
+      under Never → fault in our ppumod payload (fork's
+      compile/hydrate/codegen lane, I take it there); PERSISTS →
+      payload exonerated → H2 (Resolution Scale 150→100, `Handle RSX
+      Memory Tiling` stays false; keep Never so only scale changes) or
+      H4 (stock RPCS3 repro → upstream report). One toggle per boot;
+      after the verdict flip back to `Prefer` unless we go straight to
+      H2. OPEN ITEM (my lane): user-selectable PPU-mode setting in
+      the launcher so the GUI stops stomping manual toggles.
 - [ ] D merge gates C1–C4 (when Option D launches)
 - [x] **Release v0.9.0 (prototype)** shipped 2026-11-10: tag pushed to
       `demonlorddio/Asuras_wrath_recomp`, GitHub release carries
@@ -172,6 +210,24 @@
       candidate addresses to the bus as they land — Agnes wires +
       boot-verifies each. Claim = flip Status in `re/` task file
       (create `T-006.md`), branch `T-006`.
+      **STATE (2026-11-10, MSG-0032/0033):** parser step 1 landed —
+      BCGAME.XXX container recipe independently reproduced (314 zlib
+      streams; Σout 20,547,928 = sidecar) and name-entry layout
+      derived: `int32 BE len | chars incl NUL | 8-byte const
+      00 07 00 10 00 00 00 00` (500 consecutive entries share one
+      trailer → structural). Walk from 0x2A4F5 → 19,033 names to
+      0xAFC79 ('ZValue'); 'None' @ 0x8555D = index 12,776; one
+      contiguous table. Export walk BLOCKED on the v841
+      FPackageFileSummary field order: the G4DEK doc is not
+      retrievable (site 404, GitHub 0 hits, raw 404s), so MSG-0033
+      handed over the public-parser-derived stock order (flagged
+      NOT-G4DEK) + the observed PS3 header shape (FString "None" @ +12
+      early = reorder signal; stock NamesCount/NamesOffset placement
+      ruled out; 2-KiB 4-aligned scan shows none of her walk numbers
+      in the header; candidate: 4-unaligned 0x000AFCB5 @ +45 ≈
+      region_end + 0x3C). Her hold unchanged: no verdict until the
+      walk reproduces `Engine.Actor:TakeDamage` non-native with
+      bytecode > 0.
 
 Each T-xxx file is self-contained (inputs, outputs, acceptance). Claim = flip
 `Status:` in the file to `in_progress (Freebuff)`; leave findings + a report
