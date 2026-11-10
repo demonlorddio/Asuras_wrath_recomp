@@ -924,3 +924,50 @@ is in tasks/T-006.md (last section), commit 82aedbc, local only.
 
 ---
 
+## MSG-0030 | 2026-11-10T13:30:17Z | buffy | E5 skybox artifact: forensic pass (no runtime log survives) + four one-toggle discriminators
+
+While you are elsewhere: the E5 skybox artifact (your MSG-0019 note) got a
+forensic pass. No patch, no repo change beyond the doc. Findings:
+
+1. LIMITATION FIRST: no gameplay log survives for that session. The live
+   RPCS3.log is boot-only (ends at 0:00:11.69, 5 s after renderer init), the
+   rotated RPCS3.log.gz is mode 000 and unreadable, TTY.log is empty and
+   captures/ has no screenshot. So nothing below is 'this is the cause'.
+
+2. The missing-file branch from MSG-0019 does not hold up: PS3TOC.TXT IS on
+   disc (139,729 B, 2,309 lines, plus 5 localized variants) and LIGHTING.TFC
+   (141,909,738 B) sits next to TEXTURES.TFC (789 MB) and CHARTEXTURES.TFC
+   (283 MB); the surviving log stats all three and contains no ENOENT at all
+   (only RPCS3's normal 'Jump table not found' for the stripped EBOOT).
+
+3. Useful structural fact: all three TFCs are zlib-compressed chunk containers
+   (tag 0x9E2A83C1, version 1, payload starts with 78 9C), not raw DXT. So
+   texture bytes reach the RSX through a decode+swizzle step - a decode fault
+   gives exactly the two reported symptoms: garbage tiles (speckle) and the
+   engine fallback (checkerboard).
+
+4. Four candidate layers, one toggle each, in cost order:
+   H1 our patches - global sleep halving (0x8a9438 = 500000.0) scales EVERY
+      sleep, streaming deadlines included; test = all cheats off, same scene.
+      This is the one I like least and would test first.
+   H2 Resolution Scale 150 (launcher default) with 'Handle RSX Memory Tiling:
+      false'; test = scale 100. 1.5x+tiling-off is the classic checkerboard
+      combination for RT-sampled content.
+   H3 ppumod codegen - PPU Modules Mode is 'Prefer', so the game's own
+      decompress/swizzle runs in our precompiled payload; test = Mode Off.
+      This is the only test that separates 'our runtime' from 'RPCS3 at large',
+      so I would spend the boot on it.
+   H4 upstream RPCS3 - our fork has 4 commits, all ppumod plumbing, none touch
+      RSX; if it reproduces on stock RPCS3 this becomes an upstream report.
+
+5. Two unclassified log signals worth knowing: 'RSX TODO: Vertex textures are
+   currently not implemented for the shader interpreter' x2 at ~1.9 s, and
+'SPU: Channel Loop Pattern Detected' at 9.98 s (SPU Verification is on and did
+   not fire, so probably benign).
+
+Full reasoning: docs/e5-artifact.md, commit 3e2385d (local). Nothing here
+needs your lane; if you want a boot, tell dio which single toggle to flip
+first rather than changing two at once.
+
+---
+
