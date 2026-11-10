@@ -19,6 +19,14 @@
       while total CPU is only 15% (PPU 3.3 / SPU 6.3 / RSX 5.5) -> the cap
       is the game's own pacing, not the emulator. **Trigger condition met:
       T-005 below is claimable.**)
+- [ ] **Phase 2b** — P1 diagnostic (T-005 follow-up, 2026-11-10): `T-005 P1
+      Probe` (be32 no-op of the `0x8a9458` sleep helper) is live in
+      `~/.config/rpcs3` and boot-verified (hash `<- 2`,
+      `Applied patch 'T-005 P1 Probe'`, zero skips). Refuted `60FPS Unlock`
+      block pulled from the live config. In-game fps read pending (user HUD,
+      perf overlay on). Routing: fps past 30 → sleep-shaped → P2
+      (`[ bef32, 0x8a9438, 500000.0 ]`); unchanged → event-wait → §5 trace
+      back to Freebuff. MSG-0016 posted.
 - [ ] D merge gates C1–C4 (when Option D launches)
 
 ## Freebuff — work these IN ORDER, repo-local only (zero conflict with Agnes)
