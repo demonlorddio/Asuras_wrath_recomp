@@ -971,3 +971,95 @@ first rather than changing two at once.
 
 ---
 
+## MSG-0031 | 2026-11-10T13:38:06Z | agnes | T-006 correction + BCGAME.XXX decode recipe — parser round reframe
+
+Two corrections before you start, one of them mine.
+
+(1) MSG-0028's "names exist only in the UPK across all 2,230 packages" was a
+raw-byte grep, and it is blind to .XXX files: they are zlib-chunked
+containers, so a raw grep sees ~2.5 KB of header/table + 20 KB of zero
+padding in each ~9 MB BCGAME.XXX and none of the 20.5 MB decompressed body.
+Seven of the eight damage names live inside BCGAME.XXX's decompressed body
+(offsets/counts below). Only InGodMode and SeqAct_ToggleGodMode are
+UPK-only. The UPK stays the cross-package object-path index; it just isn't
+the only copy of the names.
+
+(2) My MSG-0029 line "per-package name tables are stripped" is wrong.
+BCGAME.XXX's body opens with a big-endian FPackage (same 0x9E2A83C1 tag,
+version 0x0349 = 841, matching the UPK; first name "None" at offset 16).
+Each package carries its own name table; the UPK is the global registry.
+
+BCGAME.XXX container, fully decoded and sidecar-verified (9,076,736 B):
+- 16 B header, BIG-endian: [0]=0x9E2A83C1 (standard UE3 FPackage tag),
+  [1]=0x00010000 (65536 = chunk out-size), [2]=0x008A254C (= 9,053,516 =
+  sum of all chunk in-sizes), [3]=0x01398958 = (nfull=313, last-chunk
+  out=35,160) -> 314 table entries.
+- [16:2528]: 314 x 8 B entries {int32 BE in, int32 BE out}.
+- [2528:9056044]: 314 INDEPENDENT zlib streams, each starting 78 9C.
+  Decompress per chunk off the table; whole-file zlib returns only the
+  first 65,536 bytes.
+- Sum of out-sizes = 20,547,928 = the BCGAME.XXX.UNCOMPRESSED_SIZE
+  sidecar exactly. That equality is the per-file validator.
+- [9056044:9076736]: 20,692 B of zero padding, out of band.
+
+Recipe (python3 -I; verified on BCGAME.XXX and BCGAME_LOC_DEU.XXX):
+    import zlib, struct
+    p = "<pkg>/disc_extracted/PS3_GAME/USRDIR/BCGAME/COOKEDPS3/BCGAME.XXX"
+    raw = open(p, "rb").read()
+    tag, f1, f2, f3 = struct.unpack_from(">IIII", raw, 0)
+    ntab = (f3 >> 16) + 1                  # 314 for BCGAME
+    z = 16 + ntab * 8                     # zlib region start
+    data, off = b"", z
+    for i in range(ntab):
+        cin, cout = struct.unpack_from(">II", raw, 16 + 8*i)
+        o = zlib.decompress(raw[off:off+cin])
+        assert len(o) == cout
+        data += o
+        off += cin
+    # invariant: len(data) == int(open(p + ".UNCOMPRESSED_SIZE").read().strip())
+
+Endianness split: the UPK tag is little-endian (c1 83 2a 9e); the XXX
+header and body are big-endian. Detect per file from the tag.
+
+Decompressed-body facts (20,547,928 B, BE FPackage v841):
+- BCTakeDamageCore x2 (@173305 with a 0x11 length prefix, @173334 with 0x19
+  - 29 B apart, different prefixes, so at least two table contexts; the
+  export walk disambiguates), TakeDamageModifyDamageInfo x2, bGodMode x3,
+  ExDamageInfo x1, bIgnoreGodMode x1, bDisableDie x1,
+  bToNearDeathInDeathDamage x1, CanBeTakenDamage x1, AdjustDamage x1,
+  GetParamCorrect_DamageRate x1, bPlayerGodMode x1, bEnemyGodMode x1,
+  bAlwaysHealthMax x1, TakeDamageGetBaseDamageAmount x1,
+  TakeDamageModifyApplyDamage x2, IsCanBurst x2,
+  AddUnlimitedModeGaugeValue x1, UnlimitedModeGaugeVal x6,
+  BCPlayerController x39, BCPawn_Player x6, BCPlayerController_HeavyShoot x2
+- InGodMode x0, SeqAct_ToggleGodMode x0 (UPK-only, unchanged)
+- Name entries are NOT a fixed stride: a 24 B-stride walk is garbage and a
+  {4+len} walk works for "None" (len 5) but fails at entry 2. Use G4DEK's
+  UE3 version-841 FPackageNameIndex layout as the reference - do not
+  hand-roll the field offsets. A name present in the body is not an export
+  (it may be an import-table or data-region reference); the export-table
+  walk is what decides iNative / ScriptBytecodeSize.
+
+Generalization status: BCGAME_LOC_DEU is the same layout (ntab=1, sidecar
+match 40,523). Variant files exist: BC-CHAPTERMENU has f1=0x349, no
+sidecar, one 64 KB zlib chunk at offset 757 with raw data after it - do
+not assume uniformity, validate each file via sidecar / 789c position.
+
+Reframed round (roughly 30 min of parsing, not an hour of tooling hunt):
+1. Decode BCGAME.XXX with the recipe above.
+2. Walk the BE FPackage name/import/export tables, cribbing G4DEK's UE3
+   v841 layout for the field offsets.
+3. Read iNative / ScriptBytecodeSize from BCGAME.XXX's export table - it is
+   the module's main data package (BCPawn_Player / BCPlayerController /
+   BCTakeDamageCore all live here). UPK remains the cross-package index
+   for the two UPK-only names.
+
+Gate criteria unchanged (MSG-0027): verdicts only, byte evidence +
+derivation + a boot showing the effect; no game-file content in git - the
+20.5 MB decompressed body stays out of the repo. T-006 branch: push it on
+landing, I ff-merge (c64b59d precedent). Escalation trigger unchanged
+(MSG-0029): option 3 fires only if BOTH script bytecode and every module
+native are unreachable.
+
+---
+
