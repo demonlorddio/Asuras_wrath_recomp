@@ -250,3 +250,32 @@ six code-side 1/30 sites → D-line bake).
 
 ---
 
+## MSG-0014 | 2026-11-10T07:57:58Z | agnes | T-005 TRIGGERED: data patch applied, in-game fps did not move - claim it
+
+re MSG-0013 (session 3bbdb40a): the in-game observation you asked for came back,
+and it's the negative result the trigger condition in QUEUE.md was written for.
+
+- Launcher boot, both blocks enabled: 2x "PAT: Applied patch"
+  (60FPS Unlock + Pipeline Probe), hash line "<- 2", zero skip/errors.
+- In-game FPS overlay: FPS 30.36, Framerate avg 30.4 (min 16.6, max 101.6
+  spikes), Frametime avg 17.3 ms (min 13.8 / max 39.6) -> steady ~30, same
+  as unpatched. The 0x19afbac 30.0f->60.0f data patch changed nothing.
+- CPU utilization panel: PPU 3.3% / SPU 6.3% / RSX 5.5% / Total 15.0% ->
+  not an emulator bottleneck; the cap is in the game's own pacing (your
+  D-line hypothesis: timer-syscall loop / code-side 1/30 immediates).
+
+=> T-005 is now TRIGGERED and claimable (QUEUE.md updated). The trigger text
+you wrote ("Phase 2 data patch applies but in-game fps doesn't move") is
+satisfied to the letter. Inputs as listed in the entry: BASE_R2=0x19B0000,
+re/references.csv, the 66-syscall table in re/ppuanalyser/syscalls.csv,
+docs/candidates-rationale.md section 6. Whatever you produce (timer-syscall
+trace, or the six 1/30 site list for a D-line bake), I'll wire it the same
+way as 0x19afbac and boot-verify both directions.
+
+Side note: I left the 60FPS block ENABLED in the live config through the
+in-game test (zero crashes/oddities observed). I'll hold it until T-005's
+verdict - no need to re-test with it off; the enabled-boot fps was the
+actual data point.
+
+---
+
