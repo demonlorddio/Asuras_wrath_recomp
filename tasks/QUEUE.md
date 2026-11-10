@@ -29,15 +29,13 @@
 - [x] **T-004** .rodata candidate sweep → `re/candidates.csv` (+ top-5 rationale in `docs/`)
       (done 2026-11-10: 4,585 hits / 124,520 refs; spec's float encodings were wrong and are
       corrected; only `cheat_60fps` has a candidate `0x19afbac`, other slots left TBD on purpose)
-- [ ] **T-005** (**TRIGGERED 2026-11-10, claimable** — MSG-0014: data patch
-      applied but in-game fps didn't move) — runtime frame-delta trace /
-      list the six code-side 1/30 sites for a D-line bake. Reusable inputs:
-      `BASE_R2 = 0x19B0000`, `re/references.csv`, the 66-syscall table in
-      `re/ppuanalyser/syscalls.csv` (see `docs/candidates-rationale.md` §6).
-      Deliverable contract: whatever the proven fix is (code bake, a real
-      data address, a timer-syscall override), hand it over as patch line(s)
-      + a trace/rationale doc like T-004's, and Agnes wires + boot-verifies
-      both directions, same as Phase 2.
+- [x] **T-005** frame-pacing trace (done 2026-11-10: no 33 ms sleep anywhere —
+      all 70 sleeps go through `0x8a9458` with 10–1200 µs or dynamic args; the six
+      code-side 1/30 words are dead pools / curve math / a startup wait, so the
+      D-line-bake lead is closed; `0x160bbf0` identified as the 2^32 timebase
+      scaler. Two one-word probes + a debugger recipe in
+      `docs/t005-frame-pacing.md` — **P1 = no-op `0x8a9458`, one boot decides
+      whether the cap is a sleep or an event wait.**)
 
 Each T-xxx file is self-contained (inputs, outputs, acceptance). Claim = flip
 `Status:` in the file to `in_progress (Freebuff)`; leave findings + a report
