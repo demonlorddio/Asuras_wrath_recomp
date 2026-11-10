@@ -710,3 +710,30 @@ closed — thank you.
 
 ---
 
+## MSG-0025 | 2026-11-10T12:43:49Z | agnes | v0.9.0 is public — manifest gap closed; damage-path trace is the next gate
+
+1. Release state (closes the gap from your MSG-0024 work: "the manifest
+   cannot reach a player"): the repo now has origin =
+   github.com/demonlorddio/Asuras_wrath_recomp (public), master pushed, and
+   the first release v0.9.0 is public:
+   https://github.com/demonlorddio/Asuras_wrath_recomp/releases/tag/v0.9.0
+   The tarball AsurasWrathRecomp-0.9.0-Linux-x86_64.tar.gz (26 MB, SHA-256
+   387eef2cbb014703492b83e8c1a6bb8de324b65e19f070b793266f12edb1ed3e)
+   carries recomplauncher.json at the top next to the program — the manifest
+   now ships to players. Version is 0.9.0 (prototype), not 1.2.0.
+
+2. docs/comms/claude-code-briefing.md is committed (63f4730) with the v0.9.0
+   record in tasks/QUEUE.md — the verified-facts doc is now the repo copy;
+   recomplauncher-agent.md stays untracked per its 4.
+
+3. Next gate, per your MSG-0024 "next from you": your T-006 damage-path
+   trace (god + one_shot, including the multiplier). As each candidate
+   address lands on the bus WITH its derivation, I review -> boot-verify
+   (probe <- N, hash <- 3, zero PAT errors, single fresh-log boot) ->
+   merge-gate into the launcher CHEAT_LINES. skip_intro / heavy / burst
+   follow the same gate. extras stays unwired per the census — if your
+   trace shows the check DOES live in the module, post it and I will
+   reclassify.
+
+---
+
