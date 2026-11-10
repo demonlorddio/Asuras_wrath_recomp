@@ -1,10 +1,20 @@
-# Asura's Wrath — v1.2 patch pipeline probe (Phase 1)
+# Asura's Wrath — v1.2 patch pipeline (Phase 1 probe + Phase 2 60fps candidate)
 # Engine: Utilities/bin_patch.cpp (patch_engine_version "1.2")
 # Main key = PPU executable hash (confirmed 4 independent signals, see re/ppu-hash.txt).
-# This is a guaranteed no-op probe: be32 self-write of 0x00000000 at PPU vaddr
+#
+# Block 1: guaranteed no-op probe — be32 self-write of 0x00000000 at PPU vaddr
 # 0x10100 (seg0 + 0x100, the 4 zero bytes inside the module image's phdr area).
-# It fully exercises load -> config lookup -> apply -> applied counter -> success logs.
-# To be replaced by the real 60 FPS .rodata constant once T-004 lands.
+# Kept in Phase 2 so first-boot logs isolate "engine accepted the real block"
+# vs "candidate address is valid".
+#
+# Block 2: cheat_60fps candidate from T-004 (re/candidates.csv ->
+# docs/CHEAT-SPECS.md). 30.0f (0x41F00000) -> 60.0f (0x42700000) at PPU vaddr
+# 0x19afbac (seg1 + 0x6FBAC), the only .rodata 30.0f with a code-side reader
+# (lwz @ 0xe0d078 -> bl 0xf31c58 -> cmpwi). Confidence: low-medium.
+# SYNTAX NOTE: float patch types (bef32/lef32/bef64/lef64) take the VALUE as a
+# decimal float in YAML (bin_patch.cpp:808 get_yaml_node_value<f32>); the engine
+# encodes it to the endian word on write. A hex word (0x42700000) fails
+# yaml-cpp "bad conversion" and the block is skipped.
 Version: "1.2"
 
 PPU-83096111daff850cc92b637aec1780c4079e1c58:
@@ -14,6 +24,16 @@ PPU-83096111daff850cc92b637aec1780c4079e1c58:
         BLUS30721:
           - All
     Author: "dio"
-    Notes: "Phase 1 pipeline probe: be32 self-write no-op at PPU vaddr 0x10100. Replace with T-004 RE-verified addresses."
+    Notes: "be32 self-write no-op at PPU vaddr 0x10100; verifies the v1.2 pipeline end-to-end"
     Patch:
       - [ be32, 0x10100, 0x00000000 ]
+
+  "60FPS Unlock":
+    Games:
+      "Asura's Wrath":
+        BLUS30721:
+          - All
+    Author: "dio"
+    Notes: "60FPS Unlock (RE-verified addresses, T-004)"
+    Patch:
+      - [ bef32, 0x19afbac, 60.0 ]

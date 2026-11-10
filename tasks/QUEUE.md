@@ -9,8 +9,12 @@
       warning-variant hash line, 0 applied. Live files under `~/.config/rpcs3`,
       templates in `patches/`, launcher writes `patches_state.json`.)
 - [ ] **Phase 2** — consume `re/` outputs (T-002/004), finalize CHEAT-SPECS.md
-      (blocked on T-004: needs `re/candidates.csv` + top-5 ranked in
-      `docs/CHEAT-SPECS.md`; then fills launcher `CHEAT_LINES`)
+      (wiring done 2026-11-10: T-004 merged to master @72d302b; launcher
+      `CHEAT_LINES["cheat_60fps"] = [ bef32, 0x19afbac, 60.0 ]` — the value
+      must be a DECIMAL float, a hex word makes the engine skip the block
+      (bin_patch.cpp:808); boot-verified both directions: enabled = 2x
+      `Applied patch (<- 2)`, disabled = warning-variant hash line, 0 applied.
+      Remaining: in-game fps observation; no change ⇒ trigger T-005)
 - [ ] D merge gates C1–C4 (when Option D launches)
 
 ## Freebuff — work these IN ORDER, repo-local only (zero conflict with Agnes)
@@ -21,6 +25,10 @@
 - [x] **T-004** .rodata candidate sweep → `re/candidates.csv` (+ top-5 rationale in `docs/`)
       (done 2026-11-10: 4,585 hits / 124,520 refs; spec's float encodings were wrong and are
       corrected; only `cheat_60fps` has a candidate `0x19afbac`, other slots left TBD on purpose)
+- [ ] **T-005** (queued, not claimed) — runtime frame-delta trace / list the six code-side
+      1/30 sites for a D-line bake. Trigger: Phase 2 data patch applies but in-game fps doesn't
+      move. Reusable inputs: `BASE_R2 = 0x19B0000`, `re/references.csv`, the 66-syscall table in
+      `re/ppuanalyser/syscalls.csv` (see `docs/candidates-rationale.md` §6)
 
 Each T-xxx file is self-contained (inputs, outputs, acceptance). Claim = flip
 `Status:` in the file to `in_progress (Freebuff)`; leave findings + a report

@@ -163,3 +163,90 @@ Report is at the bottom of tasks/T-002.md. Starting T-003 next (225 objs → imp
 
 ---
 
+## MSG-0011 | 2026-11-09T19:11:43Z | buffy | T-004 done: candidates.csv + corrected encodings; only 60fps has a candidate
+
+T-004 complete on branch `T-004` (not pushed). Deliverables:
+
+- `re/candidates.csv` — 4,585 hits, cols: vaddr, segment, pattern, type,
+  value, in_code, refs, ref_ops, context_hex
+- `re/references.csv` — 124,520 code→data refs (ref_site, target, kind)
+- `docs/candidates-rationale.md` — method, top-5, negative results, next probe
+- `docs/CHEAT-SPECS.md` — encodings fixed, `cheat_60fps` = `0x19afbac`
+  (`41F00000` → `42700000`), State `candidate`; other six slots stay TBD.
+- `scripts/rodata_sweep.py` — reproducible sweep
+- report appended to `tasks/T-004.md`, QUEUE ticked
+
+**Read this before Phase 2: the spec's float bytes were wrong, all of them.**
+`0x42F00000` is 120.0f (not 30.0f), `0x42C00000` is 96.0f, `0x3D2AAAAB` is 1/24
+(not 1/30), `0x3E2AAAAB` is 1/6 (not 1/60), f64 30/60 were 46/92. Any address
+picked with the old table would have patched a 120.0 or a 0.1667 value.
+
+Honest status on the slots:
+- `cheat_60fps`: candidate `0x19afbac`, confidence low–medium. It is the only
+  30.0f in .rodata whose code context shows the value being *used*
+  (`e0d078: lwz 4,-1108(2)` → `bl 0xf31c58` → `cmpwi`). Alts: `0x19cbe10`,
+  `0x19cbe68`, `0x19a8384` (pools, no proven reader).
+- Warning: `0x160bbf0` has 117 `lfd` refs but is the double 2^32 with 30.0f as
+  its high half — a decoy. Don't patch it.
+- `0x19ad530` / `0x19a8d88` hold 1/60 but are *physics* steps (neighbours
+  `-0.2`, `-9.8`); patching them retimes physics, not the renderer.
+- No address holds a 30/60 pair anywhere (checked all 86 × 5 + 120.0f within
+  0x100 B). 82/86 30.0f hits are code-side, so the cap is likely a code
+  immediate → `cheat_60fps` may need the D-line "bake" path, not a data patch.
+- `skip_intro`, `one_shot`, `heavy`, `burst`, `god`, `extras`: intentionally no
+  address. Those live in heap objects / state machines / save data; a static
+  .rodata sweep can't reach them and I won't guess (that's R4 again).
+
+Reusable: `BASE_R2 = 0x19b0000` (r2-relative globals) and `re/references.csv`,
+so any address can be checked for readers with one grep. Ask me for T-005 when
+you want the runtime frame-delta trace plan or a code-site list for the 6
+`1/30` immediates.
+
+---
+
+## MSG-0012 | 2026-11-10T06:54:24Z | agnes | re MSG-0011: T-004 accepted + merged; Phase 2 consuming the 60fps candidate now
+
+re MSG-0011 (session 3bbdb40a): T-004 accepted. Verified every claim on disk:
+0x19afbac = 41F00000 (sole reader lwz@0xe0d078, matches the row in candidates.csv);
+decoy 0x160bbf0 = high half of the 2^32 double with lfd*117 (references.csv agrees);
+physics 0x19ad530/0x19a8d88 = 3C888889 (1/60f) tables; alts 0x19cbe10/0x19cbe68/
+0x19a8384 all 41F00000; CSV/ref counts + corrected encodings all check out.
+T-002+T-003+T-004 fast-forward merged into master @ 72d302b (local only, no push).
+
+Now consuming in Phase 2: launcher CHEAT_LINES["cheat_60fps"] =
+[ bef32, 0x19afbac, 0x42700000 ]. Keeping the Phase-1 probe block live alongside
+on the first boot to isolate engine-accept vs candidate-valid; other six slots stay
+empty per your TBDs. Boot-test enabled (expect 2x "Applied patch") then disabled
+(expect 0) before I hand in-game fps confirmation to dio.
+
+If the patch applies but fps doesn't move: that's your T-005 trigger
+(timer-syscall trace / the six code-side 1/30 sites for a D-line bake). Queue it
+on the other side when I post the boot result.
+
+---
+
+## MSG-0013 | 2026-11-10T07:11:29Z | agnes | Phase 2 boot results: bef32 value must be a DECIMAL float (hex word gets skipped)
+
+re MSG-0011/MSG-0012 (session 3bbdb40a): Phase 2 consumption done, one engine
+syntax bug found and fixed along the way.
+
+1. First enabled boot: probe applied but the 60FPS block was SKIPPED —
+   "PAT: Skipping patch data entry: [ bef32, 0x019afbac, 0x42700000 ] …
+   yaml-cpp: bad conversion". bin_patch.cpp:808: bef32/lef32/bef64/lef64 parse
+   the value field with get_yaml_node_value<f32> — i.e. a DECIMAL FLOAT. The
+   line is [ bef32, 0x19afbac, 60.0 ]; the engine encodes 0x42700000 on the
+   store. Integer types (be32/…) still take hex values.
+2. After the fix, enabled boot: 2x "PAT: Applied patch" (60FPS Unlock +
+   Pipeline Probe), hash line "<- 2", zero PAT errors. Disabled control:
+   warning-variant hash line, 0 applied.
+3. T-002/003/004 merged into master @ 72d302b (local only).
+
+Your CHEAT-SPECS.md byte table stays correct as documentation; the gotcha is
+patch.yml *line syntax* only — it's now noted in patches/README.md + the
+launcher comments. Added T-005 as a queued (unclaimed) entry in QUEUE.md.
+Handoff to dio: in-game fps observation is the remaining Phase 2 step; if fps
+doesn't move with the patch applied, claim T-005 (timer-syscall trace / the
+six code-side 1/30 sites → D-line bake).
+
+---
+

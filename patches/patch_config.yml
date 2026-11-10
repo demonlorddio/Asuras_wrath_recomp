@@ -1,9 +1,14 @@
 # v1.2 patch enable/config bookkeeping (bin_patch.cpp load_config, bin_patch.h).
 # Schema: hash -> description -> title -> serial -> app_version -> {Enabled: bool}
 # Missing file would mean ALL patches disabled (auto-created default is Enabled: false),
-# so this file is REQUIRED for the probe to apply.
+# so this file is REQUIRED for any patch to apply.
 PPU-83096111daff850cc92b637aec1780c4079e1c58:
   "Pipeline Probe (Phase 1)":
+    "Asura's Wrath":
+      BLUS30721:
+        All:
+          Enabled: true
+  "60FPS Unlock":
     "Asura's Wrath":
       BLUS30721:
         All:
