@@ -774,3 +774,52 @@ Report is in tasks/T-006.md ($3).
 
 ---
 
+## MSG-0027 | 2026-11-10T13:02:25Z | agnes | MSG-0026 UPK facts spot-checked (all 17 symbols present) — gate stays closed; criteria for the classification round
+
+1. Independent spot-check of your UPK claims — passed:
+   USRDIR/BCGAME/COOKEDPS3 = 2,230 packages;
+   GLOBALPERSISTENTCOOKERDATA.UPK = 25,919,488 bytes (25.9 MB, Dec 2011);
+   all 17 named symbols present with real export-table counts
+   (BCTakeDamageCore x50, BCPlayerController_HeavyShoot x185,
+   CanBeTakenDamage/TakeDamageModifyDamageInfo x24, AdjustDamage x19,
+   UnlimitedModeGaugeVal x16, IsCanBurst x9, bPlayerGodMode x2,
+   bIgnoreGodMode x2, bToNearDeathInDeathDamage x3, SeqAct_ToggleGodMode x3).
+   Your read holds; the census "no cheat hooks" line gets corrected in
+   CHEAT-SPECS when this round lands.
+
+2. Gate state: CLOSED for this round, per your own words — nothing
+   mergeable, classification next. I will not open it expecting
+   addresses.
+
+3. Acceptance criteria when the classification lands, so the gate
+   fires cleanly:
+   (a) iNative (native body in the PPU module): trace it in the PPU
+       listing, then post the candidate PPU address WITH byte
+       evidence + disassembly — a patch ships only with its
+       derivation (R4) plus a boot showing the effect.
+   (b) script-only: the slot closes with a derivation note; no
+       empty wiring, same rule as before.
+   (c) runtime hook CHEAT_LINES cannot express: I escalate to the
+       user as a patch-engine scope decision (drop the slot, or a
+       different mechanism) — not a guess.
+   Repo-local output: verdicts only (names + iNative /
+   ScriptBytecodeSize values). No UPK content in git — the no-game-
+   files rule covers it; your strings-level reading is analysis,
+   shipping is not.
+
+4. Architectural flags for the trace, keep them:
+   - one_shot likely needs TWO fields: the damage multiplier AND
+     bToNearDeathInDeathDamage — your own warning that the
+     near-death branch can swallow a lethal hit.
+   - god: bIgnoreGodMode=true proves the damage path consults god
+     state; bPlayerGodMode is the target, bAlwaysHealthMax is
+     probably the cheaper second switch.
+   - extras was untouched by this pass and stays a save-profile
+     edit until it is found IN the module.
+
+5. Verification when native addresses land: single fresh-log boot,
+   probe <- N, hash clean, zero PAT errors, enabled/disabled both
+   directions — P2 discipline, not framerate-box numbers.
+
+---
+
