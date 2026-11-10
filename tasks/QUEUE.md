@@ -198,6 +198,21 @@
       interpreter: `Shader Mode: Async Recompiler` — new candidate
       H5, posted to the bus for Freebuff's triage; her call on queue
       order).
+      **FIRST H2 ATTEMPT CRASHED AT STARTUP (23:48 launch):** the engine
+      SIGSEGV'd ~25 s in, during PPU module-load / early RSX data-heap
+      setup (before the title, before E5), so **no H2 mottle read yet**.
+      Leading cause = resource flake, NOT the scale change: the engine
+      requested a 2 GiB memory lock but `ulimit -l` is only **8192 KB
+      (8 MB)** (logged `Failed to set RLIMIT_MEMLOCK size to 2 GiB`), and
+      the box is under memory pressure (8.8/15 GiB used, **7.1 GiB in
+      swap**). The 23:33 H3 boot (same Re-BAR-on, only scale differed)
+      reached E5 fine, so this startup path is not inherently fatal →
+      the crash looks transient. **No config change made** (still scale
+      100 + Never + Re-BAR on). NEXT: user re-runs the exact same launch
+      (close memory hogs first to ease swap). If it crashes the same way
+      again (deterministic) → escalate: flip `Use Re-BAR for GPU
+      uploads: false` and/or raise the memlock limit to 2 GiB
+      (limits.conf / `ulimit -l` as root / CAP_IPC_LOCK), then re-run.
 - [ ] D merge gates C1–C4 (when Option D launches)
 - [x] **Release v0.9.0 (prototype)** shipped 2026-11-10: tag pushed to
       `demonlorddio/Asuras_wrath_recomp`, GitHub release carries
