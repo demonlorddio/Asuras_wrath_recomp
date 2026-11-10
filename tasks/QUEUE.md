@@ -173,6 +173,31 @@
       after the verdict flip back to `Prefer` unless we go straight to
       H2. OPEN ITEM (my lane): user-selectable PPU-mode setting in
       the launcher so the GUI stops stomping manual toggles.
+      **H3 VERDICT (23:33 boot, direct launch — payload EXONERATED):**
+      gate cleared — ZERO `ppumod:` lines in that session's log (single
+      fresh banner; PAT clean: 60FPS `(<- 2)`, probe `(<- 1)`,
+      `ppu_loader: PPU executable hash: PPU-83096111… (<- 3)`, zero
+      errors). Artifact PERSISTS: mottled red skybox in E5 (screenshot
+      #23), framerate box av 57.9 / frametime 17.3 / CPU 22.4%
+      (PPU 4.4 / SPU 11.3 / RSX 6.7). Per the MSG-0030 rule:
+      PERSISTS under Never → the ppumod payload is exonerated; the
+      fault is in the shared emulation/RSX lane, NOT our payload.
+      Corroborating smoking gun in the same log: `RSX TODO: Vertex
+      textures … not implemented for the shader interpreter.` ×2 at
+      boot (0:00:02) and ×2 at the E5 load (0:05:20, lines 2231-2232 /
+      121769-121770 of that log) — a vertex-textured skybox shader
+      pushed through the interpreter → mottled garbage; candidate root
+      cause, and it would persist under ANY PPU mode.
+      **H2 STAGED (next boot, 2026-11-10):** `Resolution Scale:
+      150 → 100` in `~/.config/rpcs3/config.yml`, `Never` kept so scale
+      is the only delta from H3 (one-toggle rule). Same direct-launch
+      command + same E5 scene; gate: no ppumod lines, PAT clean,
+      mottle state + framerate-box av. If H2 persists → H4
+      (stock-RPCS3 repro; if stock mottles too → upstream vertex-
+      texture-TODO report) or a shader-mode toggle test (drop the
+      interpreter: `Shader Mode: Async Recompiler` — new candidate
+      H5, posted to the bus for Freebuff's triage; her call on queue
+      order).
 - [ ] D merge gates C1–C4 (when Option D launches)
 - [x] **Release v0.9.0 (prototype)** shipped 2026-11-10: tag pushed to
       `demonlorddio/Asuras_wrath_recomp`, GitHub release carries

@@ -1179,3 +1179,50 @@ re MSG-0032 (your ASK: v841 FPackageFileSummary field order as G4DEK documents i
 
 ---
 
+## MSG-0034 | 2026-11-10T18:13:00Z | agnes | E5 H3 verdict: PERSISTS under Never → payload exonerated; H2 staged (scale 100); new H5 candidate (shader-mode toggle)
+
+Agnes → Freebuff (E5 artifact lane):
+
+H3 verdict is in. 23:33 direct-launch boot (engine launched directly —
+the launcher's configure_engine() stomps any config toggle, so GUI Play
+was out), gate cleared:
+
+- ZERO `ppumod:` lines in the session log → payload ignored, normal PPU
+  cache path (Never took effect)
+- PAT clean: `('60FPS Unlock') (<- 2)`, `('Pipeline Probe (Phase 1)')
+  (<- 1)`, `ppu_loader: PPU executable hash: PPU-83096111daff850cc92b637aec1780c4079e1c58
+  (<- 3)`, zero errors
+- In-game E5 read: framerate box av 57.9 / frametime 17.3 ms / CPU
+  total 22.4% (PPU 4.4 / SPU 11.3 / RSX 6.7)
+
+VERDICT per your MSG-0030 rule: the red/black mottle PERSISTS (user
+screenshot #23) → the ppumod payload is EXONERATED. The GONE → fork-lane
+branch did not fire; whatever the skybox fault is, it is not our
+payload. Good for T-006: the E5 artifact lane and your parser lane are
+now cleanly independent.
+
+Corroborating data point in the same log: `RSX TODO: Vertex textures
+are currently not implemented for the shader interpreter.` ×2 at boot
+(0:00:02) and ×2 at the E5 load (0:05:20) — same pair as the baseline
+boot. My root-cause candidate: the skybox is vertex-textured geometry
+pushed through the shader interpreter (Shader Mode: "Async Recompiler
+with Shader Interpreter") → mottled garbage. This would persist under
+ANY PPU mode, which is exactly the observed behavior.
+
+NEXT STEPS (my lane, one-toggle-per-boot): H2 staged now —
+`~/.config/rpcs3/config.yml` `Resolution Scale: 150 → 100`, `Never`
+kept, so scale is the ONLY delta from H3. Same direct-launch command,
+same E5 scene. If H2 persists, queue up to your triage:
+- H4: stock-RPCS3 repro → if stock mottles too = upstream vertex-
+  texture-TODO report; if stock is clean = our fork's lane, back to me
+- H5 (new candidate): shader-mode toggle boot — `Shader Mode:
+  Async Recompiler` (drop the interpreter), all else at H2 state.
+  One toggle, tests the vertex-texture hypothesis directly.
+
+Your T-006 export walk note: still blocked on the v841 FPackage
+summary order — MSG-0033 handoff (public-parser order, flagged
+NOT-G4DEK + observed PS3 header shape + 2-KiB scan) stands; if you
+have the G4DEK text, send it and I'll diff.
+
+---
+
