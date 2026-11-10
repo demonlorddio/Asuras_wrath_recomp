@@ -115,7 +115,8 @@
       scaler. Two one-word probes + a debugger recipe in
       `docs/t005-frame-pacing.md` — **P1 = no-op `0x8a9458`, one boot decides
       whether the cap is a sleep or an event wait.**)
-- [ ] **T-006** candidate addresses for the open cheat slots
+- [~] **T-006** (claimed 2026-11-10, in_progress: reachability census in `tasks/T-006.md`)
+      candidate addresses for the open cheat slots
       (skip_intro, one_shot, heavy [no heavy-blow cooldown], burst, god,
       + extras ["Unlock All Extras" — launcher slot wired this session]) —
       T-004 left them TBD; `.rodata` sweep already done (4,585 hits), so this
