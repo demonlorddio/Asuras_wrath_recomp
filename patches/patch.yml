@@ -7,10 +7,16 @@
 # Kept in Phase 2 so first-boot logs isolate "engine accepted the real block"
 # vs "candidate address is valid".
 #
-# Block 2: cheat_60fps candidate from T-004 (re/candidates.csv ->
-# docs/CHEAT-SPECS.md). 30.0f (0x41F00000) -> 60.0f (0x42700000) at PPU vaddr
-# 0x19afbac (seg1 + 0x6FBAC), the only .rodata 30.0f with a code-side reader
-# (lwz @ 0xe0d078 -> bl 0xf31c58 -> cmpwi). Confidence: low-medium.
+# Block 2: cheat_60fps — the FINALIZED two-line 60fps unlock
+# (re/candidates.csv -> docs/CHEAT-SPECS.md, T-004 @72d302b + T-006 P2 answer
+#  @c64b59d). Both lines ship together under the 60FPS Unlock toggle:
+#   * 0x19afbac = 60.0f (0x42700000) — the frame-rate TARGET the engine loop
+#     consumes (T-004: the only .rodata 30.0f with a code-side reader,
+#     lwz @ 0xe0d078 -> bl 0xf31c58 -> cmpwi).
+#   * 0x8a9438  = 500000.0 — the seconds->us PACE SCALE in the shared sleep
+#     helper (native 1e6). T-006 proved a single reader (lfs 2,0(3) @ 0x8a9470),
+#     so 5e5 scales every sleep site (title, menus, gameplay, IO); it is the
+#     pacing half of the unlock, not a duplicate of the target.
 # SYNTAX NOTE: float patch types (bef32/lef32/bef64/lef64) take the VALUE as a
 # decimal float in YAML (bin_patch.cpp:808 get_yaml_node_value<f32>); the engine
 # encodes it to the endian word on write. A hex word (0x42700000) fails
@@ -34,6 +40,7 @@ PPU-83096111daff850cc92b637aec1780c4079e1c58:
         BLUS30721:
           - All
     Author: "dio"
-    Notes: "60FPS Unlock (RE-verified addresses, T-004)"
+    Notes: "60FPS Unlock: frame-rate target 0x19afbac + pace scale 0x8a9438 (T-004 + T-006)"
     Patch:
       - [ bef32, 0x19afbac, 60.0 ]
+      - [ bef32, 0x0008a9438, 500000.0 ]

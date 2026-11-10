@@ -17,13 +17,13 @@ wrong by a factor of two or more; corrected in T-004, see
 
 | Cheat (settings.json key) | Hypothesis | Type | Address | Old → New | In-game verify | State |
 |---|---|---|---|---|---|---|
-| cheat_60fps | frame-cap float 30.0 → 60.0 in .rodata | be32/bef32 | `0x19afbac` (alt: `0x19cbe10`, `0x19cbe68`, `0x19a8384`) | 0x41F00000 → 0x42700000 | in-game fps counter / window-title FPS | candidate |
-| cheat_skip_intro | intro-skip flag / movie branch | be32 | TBD | ? | skips BIK intro | TBD |
-| cheat_one_shot | damage multiplier / one-hit threshold | be32 | TBD | ? | enemies die in one hit | TBD |
-| cheat_heavy (+ _cooldown off) | heavy-attack damage/cooldown constant | be32 | TBD | ? | heavy blow kills faster | TBD |
-| cheat_burst (+ infinite_burst) | burst gauge cap/refill rate | be32 | TBD | ? | gauge stays full / refills | TBD |
-| cheat_god | invincibility flag | be32 | TBD | ? | damage taken = 0 | TBD |
-| cheat_extras / all_extras | extras/cutscene gates | be32 | TBD | ? | extra content available | TBD |
+| cheat_60fps | frame-cap float + pace scale | be32/bef32 ×2 | `0x19afbac` + `0x0008a9438` | 0x41F00000 (30.0f) → 0x42700000 (60.0f); 0x49742400 (1e6f) → 0x48F42400 (5e5f) | title/boot loop caps at 60 (av 54.7 / mx 60.0, user HUD 2026-11-10) | **patched (finalized)** |
+| cheat_skip_intro | intro-skip flag / movie branch | be32 | TBD — code-side via Bink natives (`SetInput`/`IsMovieFinish`); intro is Kismet-driven, no movie name in EBOOT | ? | skips intro | T-006 tracing |
+| cheat_one_shot | damage multiplier / one-hit threshold | be32 | TBD — damage-path trace (one investigation with god, T-006) | ? | enemies die in one hit | T-006 tracing |
+| cheat_heavy (+ _cooldown off) | heavy-attack damage/cooldown constant | be32 | TBD — cooldown is a **field** on its own class `ABCPlayerController_HeavyShoot` | ? | heavy blow kills faster | T-006 tracing |
+| cheat_burst (+ infinite_burst) | burst gauge cap/refill rate | be32 | TBD — gauge is a per-frame component field | ? | gauge stays full / refills | T-006 tracing |
+| cheat_god | invincibility flag | be32 | TBD — no cheat hook ships; player damage-entry branch (called from PC tick/hit resolution), not a global | ? | damage taken = 0 | T-006 tracing |
+| cheat_extras / all_extras | extras/cutscene gates | be32 | **probably not in the module** — no extras/gallery/artwork strings; only achievement unlock execs; reads like save-profile data | ? | extra content available | **wrong layer — profile edit, not a patch (T-006)** |
 
 T-004 sweep outcome (see `docs/candidates-rationale.md`):
 - `cheat_60fps` is the only slot with a `.rodata` candidate. `0x19afbac` is the
@@ -43,3 +43,48 @@ EBOOT and rerun `--ppumod-build` instead — see NATIVE-PLAN §2/§8, D-line "ba
 
 Status column values: `candidate` → `patched` (runtime patch.yml entry) →
 `baked` (value in EBOOT + ppumod rebuilt) → `verified` (in-game evidence in qa/).
+
+## T-006 census (2026-11-10, branch `T-006` @c64b59d)
+
+The cooked binary keeps its UnrealScript names: **2,396 `<Class>exec<Func>`
+records survive**. CheatManager's complete shipped set is nav-mesh debugging
+only (`DumpCoverStats`, `VerifyNavMeshCoverRefs`, `PrintNavMeshObstacles`,
+`PrintAllPathObjectEdges`, `DrawUnsupportingEdges`, `VerifyNavMeshObjects`,
+`LogParticleActivateSystemCalls`, `LogPlaySoundCalls`). There is **no**
+`execGod`/`execGhost`/`execAllAmmo`/any gameplay cheat — the only `Unlock*`
+records are achievement/trophy execs. Consequences:
+
+- `god` + `one_shot` **cannot** be done by triggering a cheat function (none
+  exists) or flipping a cheats-enabled flag (no cheat subsystem). They must
+  come from the damage path itself — one investigation, not two sweeps. The
+  next step is the `TakeDamage`/`CanBeDamaged` branch trace; the player's
+  damage entry is the one called from the PC's tick/hit resolution, so patch
+  that branch, not a global. `one_shot`'s multiplier rides the same trace.
+- `heavy`: `ABCPlayerController_HeavyShoot` is its own PlayerController
+  class, so the cooldown is a **field** on it (a stable data address, better
+  than a code branch). Find its constructor/`PostBeginPlay` + cooldown
+  decrement.
+- `burst`: the gauge is a per-frame component field (updated from damage
+  dealt); cheapest route is the same tick trace as `heavy`.
+- `skip_intro`: reachable **code-side** via the Bink natives
+  (`PlayMovie`/`StopMovie`/`IsMoviePlaying`/`IsMovieFinish`/`SetInput`).
+  Notably there are **zero** `.bik`/`intro`/`logo` strings in the EBOOT, so
+  the intro is Kismet/sequence-driven, not a name check — there is no movie
+  name to patch. The cheat is likely forcing a skip flag, not touching
+  playback.
+- `extras`: probably **not in the module**. No extras/gallery/artwork
+  strings; the only unlock surface is achievements, which reads like
+  save-profile data. Tell the user this is a profile edit, not a patch,
+  rather than ship a guess — unless the unlock check turns out to live in the
+  module.
+- The **SPU-side angle is dropped**: the disc is a single PPU module with no
+  `.sprx`, so SPU code here is generated from the PPU image. There is no
+  separate SPU image to sweep; the values are either PPU code or runtime
+  objects.
+
+Per-cheat rule (updated): patch **data** where it lives in `.rodata`
+(cheat_60fps's two lines — proven by the 60fps title read). Where a value
+lives in a runtime object or save-profile data, a data patch may not exist —
+then a **code-branch patch** is acceptable in the runtime engine (Phase 1
+proved the `.text` no-op at `0x8a9458` applies cleanly), with the D-line bake
+caveat. Extras stays out of the patch engine entirely (profile layer).

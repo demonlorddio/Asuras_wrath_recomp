@@ -47,13 +47,22 @@ Two blocks under the PPU hash key:
    counter→log path with zero risk. Kept in Phase 2 so a first-boot log can
    separate "engine accepted the real block" from "candidate address is
    valid".
-2. `60FPS Unlock` — the T-004 candidate for `cheat_60fps`:
-   `[ bef32, 0x19afbac, 60.0 ]`. 30.0f→60.0f at PPU vaddr `0x19afbac` (seg1
-   + 0x6FBAC), the only `.rodata` 30.0f with a proven code reader
-   (`lwz 4,-1108(2)` @ 0xe0d078 → `bl 0xf31c58` → `cmpwi`). Confidence
-   low–medium; if it applies but the in-game fps counter doesn't move, the cap
-   is a code immediate and the cheat moves to the D-line "bake" path
-   (Freebuff's proposed T-005 trace).
+2. `60FPS Unlock` — the FINALIZED two-line 60fps unlock for `cheat_60fps`
+   (T-004 + T-006). Both lines ship together under one toggle:
+   - `[ bef32, 0x19afbac, 60.0 ]` — the frame-rate TARGET: 30.0f→60.0f at
+     PPU vaddr `0x19afbac` (seg1 + 0x6FBAC), the only `.rodata` 30.0f with a
+     proven code reader (`lwz 4,-1108(2)` @ 0xe0d078 → `bl 0xf31c58` →
+     `cmpwi`).
+   - `[ bef32, 0x0008a9438, 500000.0 ]` — the seconds→µs PACE SCALE in the
+     shared sleep helper (native 1e6). T-006 (MSG-0023) proved a single reader
+     (`lfs 2,0(3)` @ 0x8a9470), so 5e5 scales every one of the 70 sleep sites
+     (title, menus, gameplay, IO). It is the pacing half of the unlock, not a
+     duplicate of the target; 5e5 makes a `sleep(1/30)` round trip exactly
+     16667 µs = one 60 fps frame. Watch item: anything paced by a *different*
+     constant now runs 2× fast — check cutscene animation/audio once.
+   In-game observation (user HUD, 2026-11-10): title/boot loop caps at
+   av 54.7 / mx 60.0 with P2 live; the residual ~31 with only line 1 is the
+   title/menu loop pacing that line 2 fixes.
 
 **Syntax gotcha (source-verified, bin_patch.cpp:808):** the float patch types
 `bef32`/`lef32`/`bef64`/`lef64` read the value field as a **decimal float**
@@ -66,8 +75,9 @@ Write `60.0` (the engine encodes it big-endian on the store).
 
 1. Boot the game (launcher or `FORK_BUILD --no-gui $DISC`).
 2. Grep `/home/dio/.cache/rpcs3/RPCS3.log`:
-   - enabled: two `PAT: Applied patch` lines (`60FPS Unlock` +
-     `Pipeline Probe`), `PPU executable hash: PPU-83096111…58 (<- 2)`, zero
+   - enabled: two `PAT: Applied patch` lines (`Pipeline Probe` `(<- 1)` +
+     `60FPS Unlock` `(<- 2)` — the 60fps block now carries two lines), total
+     `PPU executable hash: PPU-83096111…58 (<- 3)`, zero
      `PAT: … Error`/`Skipping` lines.
    - disabled (both `Enabled: false` in `patch_config.yml`): the hash line
      appears **without** `(<- N)`, zero `Applied patch`.

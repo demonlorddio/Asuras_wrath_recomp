@@ -94,10 +94,47 @@
       (1.0/0.5/-1.0, 60/30 as int+float, 1/30 & 1/60 s, 120.0f, a few
       doubles) — god/skip/one-shot values appear in no swept pattern,
       consistent with T-004 ("runtime/heap state machines, not
-      .rodata"). Disc = single PPU module, 0 .sprx, so the SPU-side
-      angle means SPU code generated from the PPU image; the
-      function-prologue/code-branch angle is likely (code patches are
-      fine in the runtime engine; D-line bake caveat applies).
+      .rodata"). **SPU-side angle DROPPED (T-006):** no .sprx on the
+      disc means no separate SPU image to sweep — SPU code here is
+      generated from the PPU image, so the remaining angles are
+      function-prologue / code-branch (fine in the runtime engine,
+      D-line bake caveat applies).
+      **P2 FINALIZED (T-006 §0 / MSG-0023 @ c64b59d, 2026-11-10):**
+      no tuning — P2 ships as observed. `0x8a9438` = 1,000,000.0f
+      (`49 74 24 00`), read by exactly ONE instruction (`lfs 2, 0(3)`
+      @ 0x8a9470, the shared sleep helper), so 5e5 scales every one
+      of the 70 sleep sites (title, menus, gameplay, IO) — global,
+      NOT title-only; it does NOT supersede `0x19afbac` (the
+      frame-rate TARGET), so BOTH lines ship together under the
+      60FPS Unlock toggle: `cheat_60fps = [ bef32, 0x19afbac, 60.0 ]
+      + [ bef32, 0x0008a9438, 500000.0 ]`. 500000.0 is FINAL:
+      sleep(1/30) round-trips to 16667 µs = exactly one 60 fps
+      frame. `0x166c9b8` (the 2^63 round-half-up constant in the
+      helper) is a no-touch flag. WATCH ITEM: anything paced by a
+      DIFFERENT constant now runs 2× fast — check cutscene
+      animation/audio once; if a load ever breaks, patch that
+      specific call site, do not revert the rate. Shipped: launcher
+      `cheat_60fps` two lines + `PROBE_LINES` back to the single
+      0x10100 canary; repo `patches/patch.yml` (two-line 60FPS
+      block), `patches/README.md` (Verify: probe `(<- 1)` + 60FPS
+      `(<- 2)` = hash `(<- 3)`), `docs/CHEAT-SPECS.md` (60fps row
+      patched (finalized); others T-006 tracing; extras → wrong
+      layer) synced. Boot-verify pending: headless regen + single
+      engine, expect probe `(<- 1)`, 60FPS `(<- 2)`, hash `(<- 3)`,
+      zero errors.
+      **T-006 PLAN ABSORBED (six slots, MSG-0023):** UE3 keeps
+      UnrealScript names (2,396 exec records) — CheatManager ships
+      navmesh debug only, NO gameplay cheat. god + one_shot = ONE
+      damage-path trace (TakeDamage/CanBeDamaged branch, not a
+      global); heavy = field on its own class
+      `ABCPlayerController_HeavyShoot`; burst = per-frame gauge
+      field; skip_intro = Bink/Kismet skip flag (zero .bik/intro/
+      logo strings — Kismet-driven, no movie name to patch);
+      extras = probably a save-profile flag, NOT in the module →
+      tell the user it's a profile edit, do not patch blind. No
+      empty slot gets wired until her addresses land with
+      derivations. T-006 branch ff-merged: c64b59d now contained in
+      master (tip 6fd9451, comms snapshot MSG-0016..0023).
 - [ ] D merge gates C1–C4 (when Option D launches)
 
 ## Freebuff — work these IN ORDER, repo-local only (zero conflict with Agnes)
@@ -120,8 +157,9 @@
       (skip_intro, one_shot, heavy [no heavy-blow cooldown], burst, god,
       + extras ["Unlock All Extras" — launcher slot wired this session]) —
       T-004 left them TBD; `.rodata` sweep already done (4,585 hits), so this
-      is a fresh sweep or a different search (e.g. SPU-side values generated
-      from the PPU image, function entry prologues, branch-target patching)
+      is a different search (function entry prologues, branch-target patching;
+      SPU-side angle dropped per T-006 — no .sprx on the disc, so there is no
+      separate SPU image to sweep)
       against `re/disasm/` + `re/ppuanalyser/` (39,248 functions in
       functions.csv; candidates.csv census shows the god/skip/one-shot
       values appear in no swept float constant). User-visible
