@@ -237,6 +237,50 @@
       (fork lane, Omnirush D):** teardown order — destroy the global
       Qt audio instances before the app/event loop is gone; needs
       engine rebuild. Queue it after H2/H4/H5 verdicts land.
+      **STOP-TRIGGER REVISED (16:17 session, surviving log — overrides
+      "Who requested the stop: OPEN" above):** "Closed on its own" is NOT
+      an emu-internal stop bug; it is the user's own in-game home-menu
+      action. One process, ts monotonic: boot from disc (line 57
+      `Emulator::BootGame … direct=0`), reach the E5 transition (~12.2 s,
+      BCGAME autosave stat), then `41274 0:00:12.956 {Pad Thread}
+      opening home menu…` (PS/Guide press) → `41282 0:00:15.346 Home menu:
+      changing page to 'SaveState'` → `41285 0:00:16.139 User selected
+      reload savestate(1) in home menu` → `41286 SYS: Booting the most
+      recent savestate '…/BLUS30721_1_0.SAVESTAT.zst' using the Reload
+      shortcut` (savestate created 2026-11-10T23:37:56) → `41854
+      Emulator::BootGame … direct=1` → re-boot (cellSysutil @42772, fds
+      @46219–46223) → 20.5 s pad/audio re-init + 20.67/20.94 in-game RSX
+      vertex-texture TODO pair → log ENDS @21.39 s with **no coredump**
+      (coredumpctl set unchanged: 287709, 4962, 62810) = clean exit. In
+      `--no-gui` there is no persistent GUI home menu after an emu
+      stop/re-boot, so `main()` returns → the fullscreen window vanishes
+      = "closed on its own". The "save-transition stop" seen in all three
+      sessions is RPCS3's emu-stop + re-init cluster that follows a
+      **Reload Savestate** (the user's "loading my save"), NOT a game/emu
+      fault. The 23:48/16:08 sessions carry the same stop-cluster
+      signature (their logs were rotated out; trigger not re-verified but
+      consistent with the "load a save" report). **RETRACTED:** the
+      "new primary bug: emu-internal stop at save transition" hypothesis
+      and the "escalate the emu-internal stop to the fork lane" plan —
+      the emu is not spontaneously stopping; the user was bailing out via
+      savestate, which is also why the H2 read never landed. The ONLY
+      engine-lane item still queued is the exit-time Qt audio-teardown
+      SEGV fix (now moot as a crash because audio is `null`).
+      **`status -2` (line 41375) resolved:** it is the home-menu close
+      status after the user's selection (`closing home menu with status
+      -2`), normal menu-close flow — NOT an error marker.
+      **H2 TEST STILL PENDING — user kept aborting it:** every recent
+      boot bailed out via Reload Savestate before a clean E5 read at
+      scale 100. `Audio Renderer` is now `null` on disk (line 18,
+      verified) → the next launch exits clean (exit-time SEGV can't
+      fire). **NEXT BOOT (clean H2 read):** launch the disc directly
+      (command above), **do NOT open the in-game menu / do NOT pick
+      Reload Savestate** — let the freshly-launched game run into E5 on
+      its own, watch the skybox ~30–60 s, report mottle state +
+      framerate-box av, THEN close. Gate first (I verify): the new log's
+      Audio dump shows `Renderer: null`. H2 verdict: if mottle PERSISTS
+      at scale 100 → H4 (stock-RPCS3 repro) or H5 (`Shader Mode: Async
+      Recompiler`, drop the interpreter — Freebuff's queue call).
 - [ ] D merge gates C1–C4 (when Option D launches)
 - [x] **Release v0.9.0 (prototype)** shipped 2026-11-10: tag pushed to
       `demonlorddio/Asuras_wrath_recomp`, GitHub release carries
