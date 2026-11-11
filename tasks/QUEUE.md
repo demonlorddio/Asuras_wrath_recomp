@@ -213,6 +213,30 @@
       again (deterministic) → escalate: flip `Use Re-BAR for GPU
       uploads: false` and/or raise the memlock limit to 2 GiB
       (limits.conf / `ulimit -l` as root / CAP_IPC_LOCK), then re-run.
+      **COREDUMP VERDICT (both crashes, coredumpctl-verified):** the
+      SIGSEGV is NOT in the game path — it is an **exit-time Qt
+      audio-teardown bug**: `exit()` → global destructor
+      `std::array<qt_audio_instance,2>::~array` →
+      `QAudioOutput::~QAudioOutput` → `QObject::~QObject` → dangling
+      pointer in `QPropertyAnimation`/animation-state setter →
+      SEGV_MAPERR. Identical chain in both PIDs (287709 @23:48,
+      62810 @16:09). The emu session itself ran clean: **no FATAL in
+      log**; today's session reached the **save-load transition**
+      (0:00:59.8: pad-mode reconfigure + audio-stream restart + in-game
+      RSX vertex-texture TODO pair) and stopped ~60.6 s. **Who
+      requested the stop: OPEN** — top suspect = user close-key press
+      (RPCS3 default **Esc = close window**; pad map has **PS/Guide
+      button** bound to `Back&Start,Guide`), which fits "crashed when
+      I tried to load my save". WORKAROUND staged: `Audio Renderer:
+      null` (one toggle; visual verdict unaffected, audio silent for
+      this test boot, exits become clean → exit-time SIGSEGV can no
+      longer masquerade as a crash). NEXT BOOT: if the window
+      self-closes at the save transition **without any key press**,
+      that is an emu-internal stop → escalate (coredumps readable via
+      `coredumpctl` as user, both sessions preserved). **ENGINE FIX
+      (fork lane, Omnirush D):** teardown order — destroy the global
+      Qt audio instances before the app/event loop is gone; needs
+      engine rebuild. Queue it after H2/H4/H5 verdicts land.
 - [ ] D merge gates C1–C4 (when Option D launches)
 - [x] **Release v0.9.0 (prototype)** shipped 2026-11-10: tag pushed to
       `demonlorddio/Asuras_wrath_recomp`, GitHub release carries
